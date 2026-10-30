@@ -237,7 +237,7 @@ private struct ItemsPane: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     ForEach(group.items) { item in
-                        CleanupItemRow(model: model, item: item)
+                        CleanupItemRow(model: model, item: item, isKeeper: model.isKeeper(item, in: group))
                     }
                 }
                 .padding(.vertical, 6)
@@ -249,6 +249,7 @@ private struct ItemsPane: View {
 struct CleanupItemRow: View {
     let model: CleanupModel
     let item: CleanupItem
+    var isKeeper = false
     @State private var isHovering = false
 
     private var title: String {
@@ -275,6 +276,15 @@ struct CleanupItemRow: View {
                     .truncationMode(.middle)
             }
             Spacer(minLength: 8)
+            if isKeeper {
+                Text("ORIGINAL")
+                    .font(.system(size: 9.5, weight: .bold))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .foregroundStyle(model.module.theme.accent)
+                    .background(model.module.theme.accent.opacity(0.18), in: Capsule())
+                    .help("This copy is kept even if every copy is selected")
+            }
             Text(ByteFormat.string(item.size))
                 .font(.system(size: 12.5, weight: .medium))
                 .monospacedDigit()

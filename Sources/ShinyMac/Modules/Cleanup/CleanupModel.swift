@@ -32,6 +32,8 @@ final class CleanupModel {
     let module: Module
     let removalMode: RemovalMode
     let verb: Verb
+    /// Each group is a set of copies: at least one item per group always survives a clean.
+    let keepsOnePerGroup: Bool
     /// Whether the "always move to Trash" preference applies. Off for modules that empty the Trash itself.
     let honorsTrashPreference: Bool
     /// Asked before cleaning when set (e.g. for privacy data, which can log you out of sites).
@@ -56,6 +58,7 @@ final class CleanupModel {
         removalMode: RemovalMode,
         verb: Verb = .clean,
         honorsTrashPreference: Bool = true,
+        keepsOnePerGroup: Bool = false,
         confirmation: String? = nil,
         beforeClean: ((Set<String>) async -> Void)? = nil,
         scanner: @escaping @Sendable (ScanProgress) -> [CleanupGroup]
@@ -65,6 +68,7 @@ final class CleanupModel {
         self.removalMode = removalMode
         self.verb = verb
         self.honorsTrashPreference = honorsTrashPreference
+        self.keepsOnePerGroup = keepsOnePerGroup
         self.confirmation = confirmation
         self.scanner = scanner
     }
@@ -83,7 +87,16 @@ final class CleanupModel {
         }
     }
 
-    var selectedItems: [CleanupItem] { groups.flatMap(\.items).filter { selected.contains($0.url) } }
+    var selectedItems: [CleanupItem] {
+        groups.flatMap { group in
+            var items = group.items.filter { selected.contains($0.url) }
+            // Never remove every copy: spare the original (or the first) if all are selected.
+            if keepsOnePerGroup, items.count == group.items.count, let keeper = group.items.first(where: { !$0.isRecommended }) ?? group.items.first {
+                items.removeAll { $0.url == keeper.url }
+            }
+            return items
+        }
+    }
 
     var selectedSize: Int64 { selectedItems.reduce(0) { $0 + $1.size } }
 
@@ -99,6 +112,11 @@ final class CleanupModel {
 
     func selectedSize(of group: CleanupGroup) -> Int64 {
         group.items.filter { selected.contains($0.url) }.reduce(0) { $0 + $1.size }
+    }
+
+    /// The copy that will be kept in a duplicates group.
+    func isKeeper(_ item: CleanupItem, in group: CleanupGroup) -> Bool {
+        keepsOnePerGroup && !item.isRecommended && group.items.first(where: { !$0.isRecommended })?.url == item.url
     }
 
     // MARK: Actions
@@ -195,7 +213,18 @@ final class CleanupModel {
 
     func toggle(_ group: CleanupGroup) {
         let urls = group.items.map(\.url)
-        if checkState(of: group) == .on { selected.subtract(urls) } else { selected.formUnion(urls) }
+        if keepsOnePerGroup {
+            // Selecting a set of copies selects only the extras, never the original.
+            if urls.contains(where: selected.contains) {
+                selected.subtract(urls)
+            } else {
+                selected.formUnion(group.items.filter(\.isRecommended).map(\.url))
+            }
+        } else if checkState(of: group) == .on {
+            selected.subtract(urls)
+        } else {
+            selected.formUnion(urls)
+        }
     }
 
     private func finish(with result: Cleaner.Report) {

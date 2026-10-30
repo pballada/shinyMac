@@ -27,7 +27,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
     case privacy
     case maintenance, loginItems
     case uninstaller, updater, leftovers, extensions
-    case largeFiles, spaceLens, shredder
+    case largeFiles, duplicates, spaceLens, shredder
 
     var id: Self { self }
 
@@ -38,7 +38,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .privacy: .protection
         case .maintenance, .loginItems: .performance
         case .uninstaller, .updater, .leftovers, .extensions: .applications
-        case .largeFiles, .spaceLens, .shredder: .files
+        case .largeFiles, .duplicates, .spaceLens, .shredder: .files
         }
     }
 
@@ -55,6 +55,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .leftovers: "Leftovers"
         case .extensions: "Extensions"
         case .largeFiles: "Large & Old Files"
+        case .duplicates: "Duplicates"
         case .spaceLens: "Space Lens"
         case .shredder: "Shredder"
         }
@@ -73,6 +74,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .leftovers: "questionmark.folder.fill"
         case .extensions: "puzzlepiece.extension.fill"
         case .largeFiles: "doc.text.magnifyingglass"
+        case .duplicates: "doc.on.doc.fill"
         case .spaceLens: "chart.pie.fill"
         case .shredder: "flame.fill"
         }
@@ -92,6 +94,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .leftovers: "Find files left behind by apps you already deleted."
         case .extensions: "Review plug-ins, preference panes and screen savers."
         case .largeFiles: "Spot big files and things you haven't opened in ages."
+        case .duplicates: "Find identical files and keep just one copy."
         case .spaceLens: "See what takes up space, at a glance."
         case .shredder: "Delete files right away, skipping the Trash."
         }

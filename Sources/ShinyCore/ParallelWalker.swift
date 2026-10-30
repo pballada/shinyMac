@@ -6,7 +6,7 @@ import Synchronization
 enum ParallelWalker {
     static let keys: [URLResourceKey] = [
         .isDirectoryKey, .isPackageKey, .isSymbolicLinkKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey,
-        .contentAccessDateKey, .contentModificationDateKey,
+        .contentAccessDateKey, .contentModificationDateKey, .creationDateKey, .fileResourceIdentifierKey,
     ]
 
     private struct Queue {

@@ -39,6 +39,10 @@ final class AppState {
     let largeFiles = LargeFilesModel()
     let spaceLens = SpaceLensModel()
     let shredder = ShredderModel()
+
+    let duplicates = CleanupModel(module: .duplicates, removalMode: .trash, verb: .remove, keepsOnePerGroup: true) { progress in
+        DuplicateFinder.scan(progress: progress)
+    }
     let maintenance = MaintenanceModel()
     let loginItems = LoginItemsModel()
 
@@ -57,6 +61,7 @@ final class AppState {
         case .extensions: extensions.phase == .results ? "\(extensions.groups.reduce(0) { $0 + $1.items.count })" : nil
         case .largeFiles: largeFiles.badge
         case .spaceLens: spaceLens.badge
+        case .duplicates: duplicates.badge
         case .shredder: shredder.items.isEmpty ? nil : ByteFormat.string(shredder.totalSize)
         case .maintenance: maintenance.badge
         case .loginItems: loginItems.badge
@@ -94,6 +99,7 @@ final class AppState {
         case .privacy: privacy
         case .leftovers: leftovers
         case .extensions: extensions
+        case .duplicates: duplicates
         default: nil
         }
     }
