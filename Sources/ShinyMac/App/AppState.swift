@@ -17,11 +17,14 @@ final class AppState {
         TrashScanner.scan(progress: progress)
     }
 
+    let uninstaller = UninstallerModel()
+
     /// Short status shown next to a module in the sidebar, such as the size of junk found.
     func badge(for module: Module) -> String? {
         switch module {
         case .systemJunk: junk.badge
         case .trash: trash.badge
+        case .uninstaller: uninstaller.phase == .ready ? "\(uninstaller.apps.count)" : nil
         default: nil
         }
     }
@@ -29,6 +32,7 @@ final class AppState {
     #if DEBUG
     /// Read-only actions for the screenshot hook.
     func performDebugAction(_ action: String) {
+        if selection == .uninstaller { uninstaller.load(); return }
         guard let model = cleanupModel(for: selection) else { return }
         model.scan()
         if action == "review" {
