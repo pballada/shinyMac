@@ -34,6 +34,7 @@ final class AppState {
     let updater = UpdaterModel()
     let largeFiles = LargeFilesModel()
     let spaceLens = SpaceLensModel()
+    let shredder = ShredderModel()
     let maintenance = MaintenanceModel()
     let loginItems = LoginItemsModel()
 
@@ -51,6 +52,7 @@ final class AppState {
         case .leftovers: leftovers.badge
         case .largeFiles: largeFiles.badge
         case .spaceLens: spaceLens.badge
+        case .shredder: shredder.items.isEmpty ? nil : ByteFormat.string(shredder.totalSize)
         case .maintenance: maintenance.badge
         case .loginItems: loginItems.badge
         case .updater: updater.badge

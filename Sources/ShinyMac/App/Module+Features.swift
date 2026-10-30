@@ -58,6 +58,11 @@ extension Module {
                 Feature(symbol: "film.fill", title: "By kind", detail: "Videos, archives, disk images and more."),
                 Feature(symbol: "calendar", title: "By age", detail: "Files you haven't opened in a long time."),
             ]
+        case .shredder:
+            [
+                Feature(symbol: "hand.draw.fill", title: "Drag and drop", detail: "Drop files or folders to queue them."),
+                Feature(symbol: "flame.fill", title: "No Trash detour", detail: "Gone immediately, including stubborn locked items."),
+            ]
         case .spaceLens:
             [
                 Feature(symbol: "chart.pie.fill", title: "Visual map", detail: "An interactive sunburst of your folders."),
