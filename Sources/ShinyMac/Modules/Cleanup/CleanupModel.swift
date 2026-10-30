@@ -135,6 +135,11 @@ final class CleanupModel {
     }
 
     func clean() {
+        work = Task { await cleanNow() }
+    }
+
+    /// Cleans the current selection and returns once finished, so Smart Care can chain steps.
+    func cleanNow() async {
         let items = selectedItems
         guard !items.isEmpty else { return }
         let mode = Preferences.alwaysUseTrash && honorsTrashPreference ? .trash : removalMode
@@ -143,14 +148,12 @@ final class CleanupModel {
         withAnimation(.smooth) { phase = .cleaning }
         let box = ScanProgress()
         let affectedGroups = Set(groups.filter { $0.items.contains { selected.contains($0.url) } }.map(\.id))
-        work = Task {
-            await beforeClean?(affectedGroups)
-            let result = await runInBackground(progress: box, minimumDuration: .seconds(1), onProgress: {
-                self.progress = $0
-            }) { Cleaner.remove(items, mode: mode, progress: box) }
-            guard let result else { return }
-            finish(with: result)
-        }
+        await beforeClean?(affectedGroups)
+        let result = await runInBackground(progress: box, minimumDuration: .seconds(1), onProgress: {
+            self.progress = $0
+        }) { Cleaner.remove(items, mode: mode, progress: box) }
+        guard let result else { return }
+        finish(with: result)
     }
 
     /// Retries items that failed for permission reasons as administrator.

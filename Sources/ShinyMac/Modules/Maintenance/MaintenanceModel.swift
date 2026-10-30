@@ -39,12 +39,18 @@ final class MaintenanceModel {
 
     /// Unprivileged tasks run one by one; privileged ones are batched behind a single password prompt.
     func run() {
+        Task { await runNow() }
+    }
+
+    /// Runs the selected tasks and returns how many succeeded.
+    @discardableResult
+    func runNow() async -> Int {
         let chosen = tasks.filter { selected.contains($0.id) }
-        guard !chosen.isEmpty, !isRunning else { return }
+        guard !chosen.isEmpty, !isRunning else { return 0 }
         isRunning = true
         statuses = Dictionary(uniqueKeysWithValues: chosen.map { ($0.id, Status.waiting) })
 
-        Task {
+        do {
             for task in chosen where !task.needsAdmin {
                 statuses[task.id] = .running
                 let outcome = await runInBackground(minimumDuration: .seconds(0.6)) { Maintenance.run(task) } ?? .cancelled
@@ -61,7 +67,10 @@ final class MaintenanceModel {
             UserDefaults.standard.set(lastRun, forKey: Self.lastRunKey)
             isRunning = false
         }
+        return chosen.count { statuses[$0.id] == .done }
     }
+
+    var selectedTasks: [MaintenanceTask] { tasks.filter { selected.contains($0.id) } }
 
     private func record(_ outcome: MaintenanceOutcome, for task: MaintenanceTask) {
         withAnimation(.smooth) {

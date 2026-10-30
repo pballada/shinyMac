@@ -39,6 +39,15 @@ final class UpdaterModel {
         }
     }
 
+    /// Adopts results gathered by Smart Care.
+    func apply(_ found: [AppUpdate], feedCount: Int) {
+        updates = found
+        self.feedCount = feedCount
+        checkedCount = feedCount
+        lastChecked = .now
+        withAnimation(.smooth) { phase = .ready }
+    }
+
     /// Opening the app lets its built-in updater take over.
     func open(_ update: AppUpdate) {
         NSWorkspace.shared.openApplication(at: update.app.url, configuration: NSWorkspace.OpenConfiguration())
