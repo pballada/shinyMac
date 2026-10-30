@@ -53,6 +53,11 @@ extension Module {
                 Feature(symbol: "questionmark.folder.fill", title: "Orphaned files", detail: "Support files from apps that are no longer installed."),
                 Feature(symbol: "checkmark.shield.fill", title: "Careful matching", detail: "Anything from a vendor you still use is left alone."),
             ]
+        case .extensions:
+            [
+                Feature(symbol: "puzzlepiece.extension.fill", title: "Everything that plugs in", detail: "Quick Look, Spotlight, preference panes, screen savers, internet plug-ins."),
+                Feature(symbol: "trash.fill", title: "Remove leftovers", detail: "Add-ons often outlive the apps that installed them."),
+            ]
         case .largeFiles:
             [
                 Feature(symbol: "film.fill", title: "By kind", detail: "Videos, archives, disk images and more."),

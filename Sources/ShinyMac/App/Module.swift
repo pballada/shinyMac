@@ -26,7 +26,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
     case systemJunk, trash
     case privacy
     case maintenance, loginItems
-    case uninstaller, updater, leftovers
+    case uninstaller, updater, leftovers, extensions
     case largeFiles, spaceLens, shredder
 
     var id: Self { self }
@@ -37,7 +37,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .systemJunk, .trash: .cleanup
         case .privacy: .protection
         case .maintenance, .loginItems: .performance
-        case .uninstaller, .updater, .leftovers: .applications
+        case .uninstaller, .updater, .leftovers, .extensions: .applications
         case .largeFiles, .spaceLens, .shredder: .files
         }
     }
@@ -53,6 +53,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .uninstaller: "Uninstaller"
         case .updater: "Updater"
         case .leftovers: "Leftovers"
+        case .extensions: "Extensions"
         case .largeFiles: "Large & Old Files"
         case .spaceLens: "Space Lens"
         case .shredder: "Shredder"
@@ -70,6 +71,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .uninstaller: "shippingbox.fill"
         case .updater: "arrow.down.app.fill"
         case .leftovers: "questionmark.folder.fill"
+        case .extensions: "puzzlepiece.extension.fill"
         case .largeFiles: "doc.text.magnifyingglass"
         case .spaceLens: "chart.pie.fill"
         case .shredder: "flame.fill"
@@ -88,6 +90,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .uninstaller: "Remove apps completely, along with every file they left behind."
         case .updater: "Find apps with new versions available."
         case .leftovers: "Find files left behind by apps you already deleted."
+        case .extensions: "Review plug-ins, preference panes and screen savers."
         case .largeFiles: "Spot big files and things you haven't opened in ages."
         case .spaceLens: "See what takes up space, at a glance."
         case .shredder: "Delete files right away, skipping the Trash."
