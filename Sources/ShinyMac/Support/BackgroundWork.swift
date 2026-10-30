@@ -23,6 +23,7 @@ func runInBackground<T: Sendable>(
         await worker.value
     } onCancel: {
         worker.cancel()
+        progress.cancel()
     }
 
     let remaining = minimumDuration - (ContinuousClock.now - start)

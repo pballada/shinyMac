@@ -16,6 +16,7 @@ public final class ScanProgress: Sendable {
     }
 
     private let state = Mutex(Snapshot())
+    private let cancelled = Atomic<Bool>(false)
 
     public init() {}
 
@@ -34,6 +35,13 @@ public final class ScanProgress: Sendable {
 
     public func update(fraction: Double) {
         state.withLock { $0.fraction = min(max(fraction, 0), 1) }
+    }
+
+    /// Set when the user stops a scan. Unlike `Task.isCancelled`, worker threads spawned by the scan can see it.
+    public var isCancelled: Bool { cancelled.load(ordering: .relaxed) || Task.isCancelled }
+
+    public func cancel() {
+        cancelled.store(true, ordering: .relaxed)
     }
 
     public func found(bytes: Int64) {
