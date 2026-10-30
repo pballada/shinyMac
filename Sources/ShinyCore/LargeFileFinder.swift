@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 import UniformTypeIdentifiers
 
 /// Broad file categories used to filter large files.
@@ -65,12 +66,12 @@ public struct LargeFile: Identifiable, Hashable, Sendable {
     public var lastUsed: Date? { [lastOpened, modified].compactMap { $0 }.max() }
 }
 
-/// Walks the home folder for big files. `~/Library` and hidden folders are skipped; packages such as
+/// Walks the home folder for big files, in parallel. `~/Library` and hidden folders are skipped; packages such as
 /// photo libraries and apps count as one item.
 public enum LargeFileFinder {
-    static let keys: [URLResourceKey] = [
-        .isDirectoryKey, .isPackageKey, .isSymbolicLinkKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey,
-        .contentAccessDateKey, .contentModificationDateKey,
+    /// Dependency and build folders: huge numbers of tiny files, never the big files people want to review.
+    static let skippedFolderNames: Set<String> = [
+        "node_modules", "Pods", "venv", "site-packages", "__pycache__", "DerivedData", "bower_components", "vendor",
     ]
 
     public static func scan(root: URL = Paths.home, minimumSize: Int64, progress: ScanProgress) -> [LargeFile] {
@@ -78,43 +79,34 @@ public enum LargeFileFinder {
             root.appending(path: "Library").path(percentEncoded: false),
             root.appending(path: "Applications").path(percentEncoded: false),
         ]
-        guard let enumerator = FileManager.default.enumerator(
-            at: root, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles], errorHandler: { _, _ in true }
-        ) else { return [] }
+        let collected = Mutex<[LargeFile]>([])
 
-        var results: [LargeFile] = []
-        var visited = 0
-        for case let url as URL in enumerator {
-            visited += 1
-            if visited.isMultiple(of: 256) {
-                if Task.isCancelled { break }
-                progress.update(detail: Paths.abbreviated(url.deletingLastPathComponent()))
+        ParallelWalker.walk(root: root, progress: progress) { url, values in
+            if values.isDirectory == true, values.isPackage != true {
+                let skip = skipped.contains(url.path(percentEncoded: false).trimmingSuffix("/"))
+                    || skippedFolderNames.contains(url.lastPathComponent)
+                return !skip
             }
-            guard let values = try? url.resourceValues(forKeys: Set(keys)), values.isSymbolicLink != true else { continue }
-
-            let size: Int64
-            let isPackage = values.isPackage == true
-            if values.isDirectory == true {
-                if skipped.contains(url.path(percentEncoded: false).trimmingSuffix("/")) {
-                    enumerator.skipDescendants()
-                    continue
-                }
-                guard isPackage else { continue }
-                enumerator.skipDescendants()
-                size = FileSizer.size(of: url)
-            } else {
-                size = FileSizer.allocatedSize(values)
+            if let file = evaluate(url, values: values, minimumSize: minimumSize, progress: progress) {
+                collected.withLock { $0.append(file) }
             }
-
-            guard size >= minimumSize else { continue }
-            results.append(LargeFile(
-                url: url, size: size, kind: FileKind.of(url, isPackage: isPackage),
-                lastOpened: values.contentAccessDate, modified: values.contentModificationDate
-            ))
-            progress.found(bytes: size)
+            return false
         }
-        return results.sorted { $0.size > $1.size }
+        return collected.withLock { $0 }.sorted { $0.size > $1.size }
     }
+
+    /// A large file (or package, measured as a whole), or nil if it's under the threshold.
+    private static func evaluate(_ url: URL, values: URLResourceValues, minimumSize: Int64, progress: ScanProgress) -> LargeFile? {
+        let isPackage = values.isDirectory == true && values.isPackage == true
+        let size = isPackage ? FileSizer.size(of: url) : FileSizer.allocatedSize(values)
+        guard size >= minimumSize else { return nil }
+        progress.found(bytes: size)
+        return LargeFile(
+            url: url, size: size, kind: FileKind.of(url, isPackage: isPackage),
+            lastOpened: values.contentAccessDate, modified: values.contentModificationDate
+        )
+    }
+
 }
 
 extension String {
