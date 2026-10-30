@@ -58,4 +58,22 @@ import Testing
         #expect(!backups.selectedByDefault)
         #expect(backups.items.first?.name.hasPrefix("Test iPhone · ") == true)
     }
+
+    @Test func offersOnlyStaleDownloads() throws {
+        let home = try TempFolder()
+        let old = try home.file("Downloads/old-report.pdf", bytes: 20_000)
+        try home.file("Downloads/fresh.pdf", bytes: 20_000)
+        try home.file("Downloads/Setup.dmg", bytes: 20_000)
+        let longAgo = Date.now.addingTimeInterval(-400 * 86_400)
+        try FileManager.default.setAttributes([.modificationDate: longAgo], ofItemAtPath: old.path)
+        var values = URLResourceValues()
+        values.contentAccessDate = longAgo
+        var mutableOld = old
+        try mutableOld.setResourceValues(values)
+
+        let groups = JunkScanner.scan(home: home.url, progress: ScanProgress())
+        let downloads = try #require(groups.first { $0.id == "oldDownloads" })
+        #expect(downloads.items.map(\.name) == ["old-report.pdf"])
+        #expect(!downloads.selectedByDefault)
+    }
 }
