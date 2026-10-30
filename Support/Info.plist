@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleExecutable</key>
+	<string>ShinyMac</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.pballada.shinymac</string>
+	<key>CFBundleName</key>
+	<string>ShinyMac</string>
+	<key>CFBundleDisplayName</key>
+	<string>ShinyMac</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>15.0</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>ShinyMac asks Finder to empty the Trash and to reveal files.</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2026 Pau Ballada. MIT License.</string>
+</dict>
+</plist>
