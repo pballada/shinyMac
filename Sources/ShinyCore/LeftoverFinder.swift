@@ -111,7 +111,7 @@ public struct Leftover: Identifiable, Hashable, Sendable {
     }
 }
 
-/// Finds the files an app spreads across the system, Pearcleaner-style.
+/// Finds the files an app spreads across the system.
 public enum LeftoverFinder {
     public static func searchRoots(home: URL = Paths.home) -> [(url: URL, kind: LeftoverKind)] {
         let user: [(String, LeftoverKind)] = [
