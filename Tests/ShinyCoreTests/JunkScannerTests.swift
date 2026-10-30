@@ -40,4 +40,22 @@ import Testing
         #expect(!JunkScanner.isBrokenPropertyList(good))
         #expect(JunkScanner.isBrokenPropertyList(broken))
     }
+
+    @Test func findsIOSFirmwareAndNamesDeviceBackups() throws {
+        let home = try TempFolder()
+        try home.file("Library/iTunes/iPhone Software Updates/iPhone_18.0_Restore.ipsw", bytes: 60_000)
+        try home.file("Library/iTunes/iPhone Software Updates/notes.txt", bytes: 100)
+        let backup = home.url.appending(path: "Library/Application Support/MobileSync/Backup/00008110-ABC")
+        try FileManager.default.createDirectory(at: backup, withIntermediateDirectories: true)
+        try PropertyListSerialization.data(fromPropertyList: [
+            "Device Name": "Test iPhone", "Last Backup Date": Date(timeIntervalSince1970: 1_700_000_000),
+        ], format: .xml, options: 0).write(to: backup.appending(path: "Info.plist"))
+        try home.file("Library/Application Support/MobileSync/Backup/00008110-ABC/Manifest.db", bytes: 40_000)
+
+        let groups = Dictionary(uniqueKeysWithValues: JunkScanner.scan(home: home.url, progress: ScanProgress()).map { ($0.id, $0) })
+        #expect(groups["iosUpdates"]?.items.map(\.name) == ["iPhone_18.0_Restore.ipsw"])
+        let backups = try #require(groups["iosBackups"])
+        #expect(!backups.selectedByDefault)
+        #expect(backups.items.first?.name.hasPrefix("Test iPhone · ") == true)
+    }
 }
