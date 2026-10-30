@@ -27,16 +27,18 @@ ShinyMac brings the CleanMyMac experience together with Pearcleaner's thorough a
 | | Module | What it does |
 |---|---|---|
 | ✨ | **Smart Care** | One scan across every module, a dashboard of what it found, and a one-click tune-up |
-| 🫧 | **System Junk** | User caches, logs, Xcode DerivedData and simulators, Homebrew/npm/pip/Yarn/CocoaPods/SwiftPM/Gradle/Cargo caches, Mail downloads, broken preferences |
+| 🫧 | **System Junk** | User caches, logs, Xcode DerivedData and simulators, Homebrew/npm/pip/Yarn/CocoaPods/SwiftPM/Gradle/Cargo caches, Mail downloads, broken preferences, iOS firmware and old device backups, stale downloads |
 | 🗑️ | **Trash Bins** | Every Trash, including external drives, with a Finder fallback when access is restricted |
 | ✋ | **Privacy** | History and cookies for Safari, Chrome, Edge, Brave, Arc, Vivaldi, Opera and Firefox, plus Recent Items. Never touches passwords or bookmarks |
-| 🔧 | **Maintenance** | Free up RAM, flush DNS, reindex Spotlight, rebuild Launch Services, reset Quick Look and font caches, thin Time Machine snapshots, speed up Mail, all behind a single password prompt |
+| 🔧 | **Maintenance** | Free up RAM, flush DNS, reindex Spotlight, rebuild Launch Services, reset Quick Look and font caches, thin Time Machine snapshots, speed up Mail, clean up Homebrew, all behind a single password prompt |
 | ⏻ | **Login Items** | Every launch agent and daemon, which app owns it, whether it's running, and **broken** items left by deleted apps |
-| 📦 | **Uninstaller** | Apps plus every file they scatter across 22 Library locations; *Reset* wipes an app's data but keeps the app |
+| 📦 | **Uninstaller** | Apps plus every file they scatter across 22 Library locations; *Reset* wipes an app's data but keeps the app. Drop an app on the window or Dock icon to start |
 | ⬇️ | **Updater** | Checks each app's Sparkle feed for newer versions |
 | ❓ | **Leftovers** | Support files from apps you already deleted, matched conservatively |
+| 🧩 | **Extensions** | Quick Look and Spotlight plug-ins, preference panes, screen savers, internet plug-ins |
 | 📄 | **Large & Old Files** | Big and forgotten files by kind, age and size, scanned on all cores |
 | 🥧 | **Space Lens** | Interactive sunburst map of any folder: hover, drill down, remove |
+| 🔥 | **Shredder** | Drop files to delete them immediately, skipping the Trash |
 | 📈 | **Menu bar monitor** | CPU, memory, disk, battery and network at a glance, with one-click RAM cleanup |
 
 <p align="center">
