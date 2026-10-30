@@ -1,0 +1,36 @@
+import Foundation
+import Synchronization
+
+/// Thread-safe progress shared between a background scan and the UI, which polls `snapshot`.
+public final class ScanProgress: Sendable {
+    public struct Snapshot: Sendable, Equatable {
+        public var detail = ""
+        public var fraction: Double?
+        public var bytesFound: Int64 = 0
+    }
+
+    private let state = Mutex(Snapshot())
+
+    public init() {}
+
+    public var snapshot: Snapshot { state.withLock { $0 } }
+
+    public func update(detail: String) {
+        state.withLock { $0.detail = detail }
+    }
+
+    public func update(detail: String, fraction: Double) {
+        state.withLock {
+            $0.detail = detail
+            $0.fraction = min(max(fraction, 0), 1)
+        }
+    }
+
+    public func update(fraction: Double) {
+        state.withLock { $0.fraction = min(max(fraction, 0), 1) }
+    }
+
+    public func found(bytes: Int64) {
+        state.withLock { $0.bytesFound += bytes }
+    }
+}
