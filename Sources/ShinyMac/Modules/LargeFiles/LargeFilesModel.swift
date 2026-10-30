@@ -97,6 +97,14 @@ final class LargeFilesModel {
         }
     }
 
+    /// Adopts results gathered by Smart Care.
+    func apply(_ found: [LargeFile]) {
+        files = found
+        selection = []
+        lastReport = nil
+        withAnimation(.smooth) { phase = .ready }
+    }
+
     func stop() {
         work?.cancel()
         withAnimation(.smooth) { phase = files.isEmpty ? .idle : .ready }

@@ -36,6 +36,8 @@ struct DetailView: View {
 
     var body: some View {
         switch module {
+        case .smartCare:
+            SmartCareView(model: state.smartCare)
         case .systemJunk:
             CleanupModuleView(model: state.junk)
         case .trash:
@@ -56,8 +58,6 @@ struct DetailView: View {
             MaintenanceView(model: state.maintenance)
         case .loginItems:
             LoginItemsView(model: state.loginItems)
-        default:
-            ModuleStartView(module: module, features: module.features, isEnabled: false) {}
         }
     }
 }

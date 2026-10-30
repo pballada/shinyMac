@@ -37,6 +37,11 @@ final class AppState {
     let maintenance = MaintenanceModel()
     let loginItems = LoginItemsModel()
 
+    @ObservationIgnored
+    private(set) lazy var smartCare = SmartCareModel(
+        junk: junk, trash: trash, leftovers: leftovers, largeFiles: largeFiles, updater: updater, maintenance: maintenance
+    )
+
     /// Short status shown next to a module in the sidebar, such as the size of junk found.
     func badge(for module: Module) -> String? {
         switch module {
@@ -57,6 +62,7 @@ final class AppState {
     #if DEBUG
     /// Read-only actions for the screenshot hook.
     func performDebugAction(_ action: String) {
+        if selection == .smartCare { smartCare.scan(); return }
         if selection == .uninstaller { uninstaller.load(); return }
         if selection == .largeFiles { largeFiles.scan(); return }
         if selection == .spaceLens { spaceLens.scan(); return }
