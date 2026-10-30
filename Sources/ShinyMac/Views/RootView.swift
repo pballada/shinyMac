@@ -50,6 +50,8 @@ struct DetailView: View {
             SpaceLensView(model: state.spaceLens)
         case .maintenance:
             MaintenanceView(model: state.maintenance)
+        case .loginItems:
+            LoginItemsView(model: state.loginItems)
         default:
             ModuleStartView(module: module, features: module.features, isEnabled: false) {}
         }
