@@ -27,6 +27,10 @@ final class AppState {
 
     let uninstaller = UninstallerModel()
 
+    let extensions = CleanupModel(module: .extensions, removalMode: .trash, verb: .remove) { progress in
+        ExtensionScanner.scan(progress: progress)
+    }
+
     let leftovers = CleanupModel(module: .leftovers, removalMode: .trash, verb: .remove) { progress in
         OrphanFinder.scan(installed: AppScanner.installedApps(), progress: progress)
     }
@@ -50,6 +54,7 @@ final class AppState {
         case .trash: trash.badge
         case .privacy: privacy.badge
         case .leftovers: leftovers.badge
+        case .extensions: extensions.phase == .results ? "\(extensions.groups.reduce(0) { $0 + $1.items.count })" : nil
         case .largeFiles: largeFiles.badge
         case .spaceLens: spaceLens.badge
         case .shredder: shredder.items.isEmpty ? nil : ByteFormat.string(shredder.totalSize)
@@ -88,6 +93,7 @@ final class AppState {
         case .trash: trash
         case .privacy: privacy
         case .leftovers: leftovers
+        case .extensions: extensions
         default: nil
         }
     }

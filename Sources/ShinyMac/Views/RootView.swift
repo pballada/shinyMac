@@ -81,6 +81,8 @@ struct DetailView: View {
             CleanupModuleView(model: state.leftovers)
         case .updater:
             UpdaterView(model: state.updater)
+        case .extensions:
+            CleanupModuleView(model: state.extensions)
         case .largeFiles:
             LargeFilesView(model: state.largeFiles)
         case .spaceLens:
