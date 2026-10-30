@@ -41,6 +41,9 @@ public enum JunkScanner {
 
     static let installerExtensions: Set<String> = ["dmg", "pkg", "mpkg", "xip"]
 
+    /// Downloads untouched for this long are offered (unchecked) for cleanup.
+    static let oldDownloadAge: TimeInterval = 182 * 86_400
+
     public static func categories(home: URL = Paths.home) -> [Category] {
         let library = home.appending(path: "Library", directoryHint: .isDirectory)
         @Sendable func lib(_ path: String) -> URL { library.appending(path: path, directoryHint: .isDirectory) }
@@ -108,6 +111,20 @@ public enum JunkScanner {
                 candidates: { children(lib("Developer/Xcode/Archives")) }
             ),
             Category(
+                id: "oldDownloads", title: "Old Downloads", detail: "Not opened or changed in over 6 months",
+                symbol: "arrow.down.circle.fill", selectedByDefault: false,
+                candidates: {
+                    let cutoff = Date.now.addingTimeInterval(-oldDownloadAge)
+                    return FileSizer.children(of: home.appending(path: "Downloads", directoryHint: .isDirectory))
+                        .filter { url in
+                            let name = url.lastPathComponent
+                            guard !name.hasPrefix("."), !installerExtensions.contains(url.pathExtension.lowercased()) else { return false }
+                            return lastUsed(url).map { $0 < cutoff } ?? false
+                        }
+                        .map { Candidate(url: $0) }
+                }
+            ),
+            Category(
                 id: "iosUpdates", title: "iOS Software Updates", detail: "Downloaded iPhone and iPad firmware, re-downloaded when needed",
                 symbol: "iphone.gen3", selectedByDefault: true,
                 candidates: {
@@ -126,6 +143,12 @@ public enum JunkScanner {
                 }
             ),
         ]
+    }
+
+    /// The later of last opened and last modified.
+    static func lastUsed(_ url: URL) -> Date? {
+        let values = try? url.resourceValues(forKeys: [.contentAccessDateKey, .contentModificationDateKey])
+        return [values?.contentAccessDate, values?.contentModificationDate].compactMap { $0 }.max()
     }
 
     /// "Pau's iPhone · Mar 3, 2025" from a backup's Info.plist, or nil to fall back to the folder name.
