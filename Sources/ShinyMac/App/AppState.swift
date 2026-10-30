@@ -31,6 +31,7 @@ final class AppState {
         OrphanFinder.scan(installed: AppScanner.installedApps(), progress: progress)
     }
 
+    let updater = UpdaterModel()
     let largeFiles = LargeFilesModel()
     let spaceLens = SpaceLensModel()
     let maintenance = MaintenanceModel()
@@ -47,6 +48,7 @@ final class AppState {
         case .spaceLens: spaceLens.badge
         case .maintenance: maintenance.badge
         case .loginItems: loginItems.badge
+        case .updater: updater.badge
         case .uninstaller: uninstaller.phase == .ready ? "\(uninstaller.apps.count)" : nil
         default: nil
         }
@@ -60,6 +62,7 @@ final class AppState {
         if selection == .spaceLens { spaceLens.scan(); return }
         if selection == .maintenance { maintenance.showTasks(); return }
         if selection == .loginItems { loginItems.load(); return }
+        if selection == .updater { updater.check(); return }
         guard let model = cleanupModel(for: selection) else { return }
         model.scan()
         if action == "review" {
