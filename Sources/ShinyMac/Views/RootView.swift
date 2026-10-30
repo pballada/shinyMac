@@ -46,6 +46,8 @@ struct DetailView: View {
             UninstallerView(model: state.uninstaller)
         case .leftovers:
             CleanupModuleView(model: state.leftovers)
+        case .updater:
+            UpdaterView(model: state.updater)
         case .largeFiles:
             LargeFilesView(model: state.largeFiles)
         case .spaceLens:
