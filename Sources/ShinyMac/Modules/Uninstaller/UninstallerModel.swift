@@ -106,7 +106,12 @@ final class UninstallerModel {
             apps = found
             sizes = [:]
             withAnimation(.smooth) { phase = .ready }
-            if selectedApp == nil, let first = found.first { select(first) }
+            if let pending = pendingApp {
+                pendingApp = nil
+                show(pending)
+            } else if selectedApp == nil, let first = found.first {
+                select(first)
+            }
 
             // Sizes trickle in so the list is usable immediately.
             let stream = AsyncStream<(URL, Int64)> { continuation in
@@ -120,6 +125,31 @@ final class UninstallerModel {
                 sizes[url] = size
             }
         }
+    }
+
+    /// An app dropped on the window or Dock icon, waiting for the app list to load.
+    private var pendingApp: InstalledApp?
+
+    /// Opens a dropped app in the uninstaller. Returns false if the URL isn't a removable app.
+    @discardableResult
+    func reveal(appAt url: URL) -> Bool {
+        guard let app = AppScanner.app(at: url) else { return false }
+        if phase == .ready {
+            show(app)
+        } else {
+            pendingApp = app
+            if phase == .idle { load() }
+        }
+        return true
+    }
+
+    private func show(_ dropped: InstalledApp) {
+        let path = dropped.url.standardizedFileURL
+        let app = apps.first { $0.url.standardizedFileURL == path } ?? dropped
+        if !apps.contains(app) { apps.insert(app, at: 0) }
+        search = ""
+        filter = .all
+        select(app)
     }
 
     func select(_ app: InstalledApp) {

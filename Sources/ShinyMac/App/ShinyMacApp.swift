@@ -38,6 +38,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate()
     }
 
+    /// Apps dragged onto the Dock icon.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        NotificationCenter.default.post(name: .shinyMacOpenApps, object: urls)
+    }
+
     /// Keep running for the menu bar monitor when it's enabled.
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         !UserDefaults.standard.bool(forKey: Preferences.Key.showMenuBarMonitor, default: true)
