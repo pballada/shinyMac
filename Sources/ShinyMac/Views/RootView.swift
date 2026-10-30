@@ -46,6 +46,8 @@ struct DetailView: View {
             CleanupModuleView(model: state.leftovers)
         case .largeFiles:
             LargeFilesView(model: state.largeFiles)
+        case .spaceLens:
+            SpaceLensView(model: state.spaceLens)
         default:
             ModuleStartView(module: module, features: module.features, isEnabled: false) {}
         }
