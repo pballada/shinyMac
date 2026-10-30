@@ -23,12 +23,15 @@ final class AppState {
         OrphanFinder.scan(installed: AppScanner.installedApps(), progress: progress)
     }
 
+    let largeFiles = LargeFilesModel()
+
     /// Short status shown next to a module in the sidebar, such as the size of junk found.
     func badge(for module: Module) -> String? {
         switch module {
         case .systemJunk: junk.badge
         case .trash: trash.badge
         case .leftovers: leftovers.badge
+        case .largeFiles: largeFiles.badge
         case .uninstaller: uninstaller.phase == .ready ? "\(uninstaller.apps.count)" : nil
         default: nil
         }
@@ -38,6 +41,7 @@ final class AppState {
     /// Read-only actions for the screenshot hook.
     func performDebugAction(_ action: String) {
         if selection == .uninstaller { uninstaller.load(); return }
+        if selection == .largeFiles { largeFiles.scan(); return }
         guard let model = cleanupModel(for: selection) else { return }
         model.scan()
         if action == "review" {

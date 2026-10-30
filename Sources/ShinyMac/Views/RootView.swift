@@ -44,6 +44,8 @@ struct DetailView: View {
             UninstallerView(model: state.uninstaller)
         case .leftovers:
             CleanupModuleView(model: state.leftovers)
+        case .largeFiles:
+            LargeFilesView(model: state.largeFiles)
         default:
             ModuleStartView(module: module, features: module.features, isEnabled: false) {}
         }
