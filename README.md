@@ -22,7 +22,7 @@
 
 ## Features
 
-ShinyMac brings the CleanMyMac experience together with Pearcleaner's thorough app removal, in one native SwiftUI app with animated aurora backgrounds and Liquid Glass.
+Everything you need to keep a Mac clean and fast, in one native SwiftUI app with animated aurora backgrounds and Liquid Glass.
 
 | | Module | What it does |
 |---|---|---|
@@ -100,10 +100,6 @@ Tests/
 - **Engine and UI are separate.** Every scanner is a plain function in `ShinyCore`, tested against throwaway home folders. The app runs them off the main actor and polls a lock-free `ScanProgress`.
 - **One flow, many modules.** `CleanupModel` drives scan → results → review → clean → done for System Junk, Trash, Privacy and Leftovers.
 - **Design system.** Per-section themes, a drifting `MeshGradient` aurora, Liquid Glass (macOS 26) with a material fallback, an orb action button and layered hero illustrations.
-
-## Credits
-
-Inspired by [Pearcleaner](https://github.com/alienator88/Pearcleaner) for thorough app removal, and by CleanMyMac for the look and feel. ShinyMac isn't affiliated with either and shares no code with them.
 
 ## License
 
