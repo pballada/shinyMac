@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct RootView: View {
@@ -29,11 +30,34 @@ struct RootView: View {
                     .transition(.opacity)
             }
         }
+        .dropDestination(for: URL.self) { urls, _ in
+            openApps(urls)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .shinyMacOpenApps)) { note in
+            openApps(note.object as? [URL] ?? [])
+        }
         .ignoresSafeArea()
         .foregroundStyle(.white)
         .preferredColorScheme(.dark)
         .animation(.smooth(duration: 0.4), value: state.selection)
     }
+}
+
+extension RootView {
+    /// Apps dropped on the window or the Dock icon open in the Uninstaller.
+    @discardableResult
+    func openApps(_ urls: [URL]) -> Bool {
+        guard let app = urls.first(where: { $0.pathExtension == "app" }), hasOnboarded else { return false }
+        guard state.uninstaller.reveal(appAt: app) else { return false }
+        state.selection = .uninstaller
+        NSApp.activate()
+        return true
+    }
+}
+
+extension Notification.Name {
+    /// Posted by the app delegate with `[URL]` when apps are dropped on the Dock icon.
+    static let shinyMacOpenApps = Notification.Name("ShinyMacOpenApps")
 }
 
 /// Routes the selected module to its screen.
