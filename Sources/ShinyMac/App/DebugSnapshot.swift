@@ -7,6 +7,9 @@ import AppKit
 enum DebugSnapshot {
     static func scheduleIfRequested(state: AppState) {
         let env = ProcessInfo.processInfo.environment
+        guard env.keys.contains(where: { $0.hasPrefix("SHINYMAC_") }) else { return }
+        // Screenshots skip the welcome screen unless SHINYMAC_ONBOARDING asks for it.
+        UserDefaults.standard.set(env["SHINYMAC_ONBOARDING"] == nil, forKey: Preferences.Key.hasOnboarded)
         if let raw = env["SHINYMAC_MODULE"], let module = Module(rawValue: raw) {
             state.selection = module
         }

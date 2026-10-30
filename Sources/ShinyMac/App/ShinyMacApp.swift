@@ -20,6 +20,10 @@ struct ShinyMacApp: App {
         .defaultSize(width: 1120, height: 740)
         .windowBackgroundDragBehavior(.enabled)
 
+        Settings {
+            SettingsView()
+        }
+
         MenuBarExtra("ShinyMac", systemImage: "sparkles", isInserted: $showMenuBarMonitor) {
             MenuBarMonitorView()
         }

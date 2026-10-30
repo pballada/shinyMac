@@ -2,24 +2,31 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(AppState.self) private var state
+    @AppStorage(Preferences.Key.hasOnboarded) private var hasOnboarded = false
 
     var body: some View {
         ZStack {
-            AuroraBackground(section: state.selection.section)
+            AuroraBackground(section: hasOnboarded ? state.selection.section : .home)
 
-            HStack(spacing: 0) {
-                SidebarView()
+            if hasOnboarded {
+                HStack(spacing: 0) {
+                    SidebarView()
 
-                ZStack {
-                    DetailView(module: state.selection)
-                        .id(state.selection)
-                        .transition(.asymmetric(
-                            insertion: .opacity.combined(with: .scale(scale: 0.985)),
-                            removal: .opacity
-                        ))
+                    ZStack {
+                        DetailView(module: state.selection)
+                            .id(state.selection)
+                            .transition(.asymmetric(
+                                insertion: .opacity.combined(with: .scale(scale: 0.985)),
+                                removal: .opacity
+                            ))
+                    }
+                    .padding(.top, 28)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .padding(.top, 28)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .transition(.opacity)
+            } else {
+                OnboardingView { withAnimation(.smooth) { hasOnboarded = true } }
+                    .transition(.opacity)
             }
         }
         .ignoresSafeArea()

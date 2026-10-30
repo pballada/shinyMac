@@ -5,6 +5,7 @@ enum Preferences {
     enum Key {
         static let alwaysUseTrash = "alwaysUseTrash"
         static let showMenuBarMonitor = "showMenuBarMonitor"
+        static let hasOnboarded = "hasOnboarded"
     }
 
     /// Move everything to the Trash, even regenerable junk that is normally deleted outright.

@@ -1,4 +1,4 @@
-.PHONY: build test app run clean
+.PHONY: build test app run icon clean
 
 build:
 	swift build
@@ -11,6 +11,9 @@ app:
 
 run: app
 	open build/ShinyMac.app
+
+icon:
+	swift scripts/make-icon.swift
 
 clean:
 	rm -rf .build build
