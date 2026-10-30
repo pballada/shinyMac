@@ -17,6 +17,14 @@ final class AppState {
         TrashScanner.scan(progress: progress)
     }
 
+    let privacy = CleanupModel(
+        module: .privacy, removalMode: .delete, honorsTrashPreference: false,
+        confirmation: "Open browsers will be quit first. Cleared history and cookies can't be restored.",
+        beforeClean: { await PrivacyModuleView.quitApps($0) }
+    ) { progress in
+        PrivacyScanner.scan(progress: progress)
+    }
+
     let uninstaller = UninstallerModel()
 
     let leftovers = CleanupModel(module: .leftovers, removalMode: .trash, verb: .remove) { progress in
@@ -33,6 +41,7 @@ final class AppState {
         switch module {
         case .systemJunk: junk.badge
         case .trash: trash.badge
+        case .privacy: privacy.badge
         case .leftovers: leftovers.badge
         case .largeFiles: largeFiles.badge
         case .spaceLens: spaceLens.badge
@@ -66,6 +75,7 @@ final class AppState {
         switch module {
         case .systemJunk: junk
         case .trash: trash
+        case .privacy: privacy
         case .leftovers: leftovers
         default: nil
         }

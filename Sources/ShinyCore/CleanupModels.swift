@@ -7,12 +7,15 @@ public struct CleanupItem: Identifiable, Hashable, Sendable {
     public let name: String
     public let size: Int64
     public let modified: Date?
+    /// Whether the item starts checked when its group does. Lets one group mix safe and opt-in items.
+    public let isRecommended: Bool
 
-    public init(url: URL, name: String? = nil, size: Int64, modified: Date? = nil) {
+    public init(url: URL, name: String? = nil, size: Int64, modified: Date? = nil, isRecommended: Bool = true) {
         self.url = url
         self.name = name ?? url.lastPathComponent
         self.size = size
         self.modified = modified
+        self.isRecommended = isRecommended
     }
 }
 
