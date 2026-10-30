@@ -7,7 +7,11 @@ final class TempFolder {
     let url: URL
 
     init() throws {
-        url = FileManager.default.temporaryDirectory.appending(path: "ShinyCoreTests-\(UUID().uuidString)", directoryHint: .isDirectory)
+        // realpath, because directory listings report /private/var rather than /var.
+        let temp = FileManager.default.temporaryDirectory.path(percentEncoded: false)
+        let real = realpath(temp, nil).map { pointer in defer { free(pointer) }; return String(cString: pointer) } ?? temp
+        url = URL(filePath: real, directoryHint: .isDirectory)
+            .appending(path: "ShinyCoreTests-\(UUID().uuidString)", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     }
 

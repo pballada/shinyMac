@@ -40,6 +40,8 @@ struct DetailView: View {
             CleanupModuleView(model: state.junk)
         case .trash:
             TrashModuleView(model: state.trash)
+        case .uninstaller:
+            UninstallerView(model: state.uninstaller)
         default:
             ModuleStartView(module: module, features: module.features, isEnabled: false) {}
         }
