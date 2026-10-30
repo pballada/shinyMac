@@ -54,6 +54,12 @@ ShinyMac brings the CleanMyMac experience together with Pearcleaner's thorough a
 
 ## Install
 
+### Homebrew
+
+```sh
+brew install --cask pballada/tap/shinymac
+```
+
 ### Download
 
 Every commit on `main` is built by CI. Grab `ShinyMac.zip` from the latest [CI run](https://github.com/pballada/shinyMac/actions/workflows/ci.yml) or from [Releases](https://github.com/pballada/shinyMac/releases).
@@ -70,6 +76,10 @@ cd shinyMac
 make run      # builds build/ShinyMac.app and opens it
 make test     # runs the ShinyCore test suite
 ```
+
+### Releasing
+
+`./scripts/release.sh 0.2.0` builds a universal binary, signs it with your Developer ID (hardened runtime), notarizes and staples it, and prints the zip's SHA-256 for the Homebrew cask. One-time setup is described at the top of the script.
 
 ### Full Disk Access
 
