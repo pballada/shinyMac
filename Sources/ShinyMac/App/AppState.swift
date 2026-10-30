@@ -10,10 +10,18 @@ final class AppState {
         JunkScanner.scan(progress: progress)
     }
 
+    let trash = CleanupModel(
+        module: .trash, removalMode: .delete, verb: .empty, honorsTrashPreference: false,
+        confirmation: "Everything selected will be deleted permanently. This can't be undone."
+    ) { progress in
+        TrashScanner.scan(progress: progress)
+    }
+
     /// Short status shown next to a module in the sidebar, such as the size of junk found.
     func badge(for module: Module) -> String? {
         switch module {
         case .systemJunk: junk.badge
+        case .trash: trash.badge
         default: nil
         }
     }
@@ -35,6 +43,7 @@ final class AppState {
     func cleanupModel(for module: Module) -> CleanupModel? {
         switch module {
         case .systemJunk: junk
+        case .trash: trash
         default: nil
         }
     }

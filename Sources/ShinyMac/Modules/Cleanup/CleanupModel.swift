@@ -32,6 +32,8 @@ final class CleanupModel {
     let module: Module
     let removalMode: RemovalMode
     let verb: Verb
+    /// Whether the "always move to Trash" preference applies. Off for modules that empty the Trash itself.
+    let honorsTrashPreference: Bool
     /// Asked before cleaning when set (e.g. for privacy data, which can log you out of sites).
     let confirmation: String?
     private let scanner: @Sendable (ScanProgress) -> [CleanupGroup]
@@ -51,12 +53,14 @@ final class CleanupModel {
         module: Module,
         removalMode: RemovalMode,
         verb: Verb = .clean,
+        honorsTrashPreference: Bool = true,
         confirmation: String? = nil,
         scanner: @escaping @Sendable (ScanProgress) -> [CleanupGroup]
     ) {
         self.module = module
         self.removalMode = removalMode
         self.verb = verb
+        self.honorsTrashPreference = honorsTrashPreference
         self.confirmation = confirmation
         self.scanner = scanner
     }
@@ -129,7 +133,7 @@ final class CleanupModel {
     func clean() {
         let items = selectedItems
         guard !items.isEmpty else { return }
-        let mode = Preferences.alwaysUseTrash ? .trash : removalMode
+        let mode = Preferences.alwaysUseTrash && honorsTrashPreference ? .trash : removalMode
         lastMode = mode
         progress = .init()
         withAnimation(.smooth) { phase = .cleaning }

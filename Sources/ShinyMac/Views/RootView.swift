@@ -38,6 +38,8 @@ struct DetailView: View {
         switch module {
         case .systemJunk:
             CleanupModuleView(model: state.junk)
+        case .trash:
+            TrashModuleView(model: state.trash)
         default:
             ModuleStartView(module: module, features: module.features, isEnabled: false) {}
         }
