@@ -25,6 +25,7 @@ final class AppState {
 
     let largeFiles = LargeFilesModel()
     let spaceLens = SpaceLensModel()
+    let maintenance = MaintenanceModel()
 
     /// Short status shown next to a module in the sidebar, such as the size of junk found.
     func badge(for module: Module) -> String? {
@@ -34,6 +35,7 @@ final class AppState {
         case .leftovers: leftovers.badge
         case .largeFiles: largeFiles.badge
         case .spaceLens: spaceLens.badge
+        case .maintenance: maintenance.badge
         case .uninstaller: uninstaller.phase == .ready ? "\(uninstaller.apps.count)" : nil
         default: nil
         }
@@ -45,6 +47,7 @@ final class AppState {
         if selection == .uninstaller { uninstaller.load(); return }
         if selection == .largeFiles { largeFiles.scan(); return }
         if selection == .spaceLens { spaceLens.scan(); return }
+        if selection == .maintenance { maintenance.showTasks(); return }
         guard let model = cleanupModel(for: selection) else { return }
         model.scan()
         if action == "review" {
