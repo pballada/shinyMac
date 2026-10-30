@@ -37,9 +37,11 @@ Everything you need to keep a Mac clean and fast, in one native SwiftUI app with
 | ❓ | **Leftovers** | Support files from apps you already deleted, matched conservatively |
 | 🧩 | **Extensions** | Quick Look and Spotlight plug-ins, preference panes, screen savers, internet plug-ins |
 | 📄 | **Large & Old Files** | Big and forgotten files by kind, age and size, scanned on all cores |
+| 👯 | **Duplicates** | Byte-for-byte identical files (SHA-256 verified); keeps the oldest copy |
 | 🥧 | **Space Lens** | Interactive sunburst map of any folder: hover, drill down, remove |
 | 🔥 | **Shredder** | Drop files to delete them immediately, skipping the Trash |
-| 📈 | **Menu bar monitor** | CPU, memory, disk, battery and network at a glance, with one-click RAM cleanup |
+| 📈 | **Menu bar monitor** | CPU, memory, disk, battery and network at a glance, the top apps by CPU or memory, and one-click RAM cleanup |
+| 🔔 | **Space alerts** | A gentle notification, at most once a day, when free space runs low or the Trash gets big |
 
 <p align="center">
   <img src="docs/screenshots/system-junk.jpg" alt="System Junk" width="49%">

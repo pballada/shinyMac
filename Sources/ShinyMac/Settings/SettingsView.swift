@@ -5,6 +5,7 @@ import SwiftUI
 struct SettingsView: View {
     @AppStorage(Preferences.Key.alwaysUseTrash) private var alwaysUseTrash = false
     @AppStorage(Preferences.Key.showMenuBarMonitor) private var showMenuBarMonitor = true
+    @AppStorage(Preferences.Key.spaceAlerts) private var spaceAlerts = true
     @State private var hasFullDiskAccess = Permissions.hasFullDiskAccess
 
     var body: some View {
@@ -20,6 +21,13 @@ struct SettingsView: View {
                 Toggle(isOn: $showMenuBarMonitor) {
                     Text("Show system monitor in the menu bar")
                     Text("CPU, memory, disk, battery and network at a glance. ShinyMac keeps running there after you close its window.")
+                }
+            }
+
+            Section("Notifications") {
+                Toggle(isOn: $spaceAlerts) {
+                    Text("Warn me when space runs low")
+                    Text("At most once a day, when free space drops below 10% or the Trash passes 5 GB.")
                 }
             }
 
