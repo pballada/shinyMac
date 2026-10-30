@@ -48,6 +48,8 @@ struct DetailView: View {
             LargeFilesView(model: state.largeFiles)
         case .spaceLens:
             SpaceLensView(model: state.spaceLens)
+        case .maintenance:
+            MaintenanceView(model: state.maintenance)
         default:
             ModuleStartView(module: module, features: module.features, isEnabled: false) {}
         }
