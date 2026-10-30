@@ -40,6 +40,8 @@ struct DetailView: View {
             CleanupModuleView(model: state.junk)
         case .trash:
             TrashModuleView(model: state.trash)
+        case .privacy:
+            PrivacyModuleView(model: state.privacy)
         case .uninstaller:
             UninstallerView(model: state.uninstaller)
         case .leftovers:

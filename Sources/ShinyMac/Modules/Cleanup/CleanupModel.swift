@@ -48,6 +48,8 @@ final class CleanupModel {
     private(set) var lastScan: Date?
     private(set) var lastMode: RemovalMode = .delete
     private var work: Task<Void, Never>?
+    /// Runs before removal with the IDs of groups that have selected items (e.g. to quit browsers).
+    private let beforeClean: ((Set<String>) async -> Void)?
 
     init(
         module: Module,
@@ -55,8 +57,10 @@ final class CleanupModel {
         verb: Verb = .clean,
         honorsTrashPreference: Bool = true,
         confirmation: String? = nil,
+        beforeClean: ((Set<String>) async -> Void)? = nil,
         scanner: @escaping @Sendable (ScanProgress) -> [CleanupGroup]
     ) {
+        self.beforeClean = beforeClean
         self.module = module
         self.removalMode = removalMode
         self.verb = verb
@@ -118,7 +122,7 @@ final class CleanupModel {
     /// Adopts results produced elsewhere (Smart Care runs several scanners at once).
     func apply(scanResult found: [CleanupGroup]) {
         groups = found.filter { !$0.items.isEmpty }
-        selected = Set(groups.filter(\.selectedByDefault).flatMap { $0.items.map(\.url) })
+        selected = Set(groups.filter(\.selectedByDefault).flatMap { $0.items.filter(\.isRecommended).map(\.url) })
         focusedGroupID = groups.first?.id
         lastScan = .now
         withAnimation(.smooth) { phase = .results }
@@ -138,7 +142,9 @@ final class CleanupModel {
         progress = .init()
         withAnimation(.smooth) { phase = .cleaning }
         let box = ScanProgress()
+        let affectedGroups = Set(groups.filter { $0.items.contains { selected.contains($0.url) } }.map(\.id))
         work = Task {
+            await beforeClean?(affectedGroups)
             let result = await runInBackground(progress: box, minimumDuration: .seconds(1), onProgress: {
                 self.progress = $0
             }) { Cleaner.remove(items, mode: mode, progress: box) }
