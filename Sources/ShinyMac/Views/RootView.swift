@@ -61,6 +61,8 @@ struct DetailView: View {
             LargeFilesView(model: state.largeFiles)
         case .spaceLens:
             SpaceLensView(model: state.spaceLens)
+        case .shredder:
+            ShredderView(model: state.shredder)
         case .maintenance:
             MaintenanceView(model: state.maintenance)
         case .loginItems:
