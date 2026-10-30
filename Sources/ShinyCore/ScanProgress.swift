@@ -7,6 +7,12 @@ public final class ScanProgress: Sendable {
         public var detail = ""
         public var fraction: Double?
         public var bytesFound: Int64 = 0
+
+        public init(detail: String = "", fraction: Double? = nil, bytesFound: Int64 = 0) {
+            self.detail = detail
+            self.fraction = fraction
+            self.bytesFound = bytesFound
+        }
     }
 
     private let state = Mutex(Snapshot())

@@ -32,8 +32,14 @@ struct RootView: View {
 /// Routes the selected module to its screen.
 struct DetailView: View {
     let module: Module
+    @Environment(AppState.self) private var state
 
     var body: some View {
-        ModuleStartView(module: module, features: module.features, isEnabled: false) {}
+        switch module {
+        case .systemJunk:
+            CleanupModuleView(model: state.junk)
+        default:
+            ModuleStartView(module: module, features: module.features, isEnabled: false) {}
+        }
     }
 }
