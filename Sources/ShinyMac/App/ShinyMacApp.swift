@@ -5,6 +5,7 @@ import SwiftUI
 struct ShinyMacApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var state = AppState()
+    @AppStorage(Preferences.Key.showMenuBarMonitor) private var showMenuBarMonitor = true
 
     var body: some Scene {
         WindowGroup("ShinyMac", id: "main") {
@@ -18,6 +19,11 @@ struct ShinyMacApp: App {
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1120, height: 740)
         .windowBackgroundDragBehavior(.enabled)
+
+        MenuBarExtra("ShinyMac", systemImage: "sparkles", isInserted: $showMenuBarMonitor) {
+            MenuBarMonitorView()
+        }
+        .menuBarExtraStyle(.window)
     }
 }
 
@@ -28,7 +34,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate()
     }
 
+    /// Keep running for the menu bar monitor when it's enabled.
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        true
+        !UserDefaults.standard.bool(forKey: Preferences.Key.showMenuBarMonitor, default: true)
     }
 }
