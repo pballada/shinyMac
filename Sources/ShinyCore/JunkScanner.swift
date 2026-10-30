@@ -107,7 +107,35 @@ public enum JunkScanner {
                 symbol: "archivebox", selectedByDefault: false,
                 candidates: { children(lib("Developer/Xcode/Archives")) }
             ),
+            Category(
+                id: "iosUpdates", title: "iOS Software Updates", detail: "Downloaded iPhone and iPad firmware, re-downloaded when needed",
+                symbol: "iphone.gen3", selectedByDefault: true,
+                candidates: {
+                    ["iTunes/iPhone Software Updates", "iTunes/iPad Software Updates", "iTunes/iPod Software Updates"]
+                        .flatMap { FileSizer.children(of: lib($0)) }
+                        .filter { $0.pathExtension.lowercased() == "ipsw" }
+                        .map { Candidate(url: $0) }
+                }
+            ),
+            Category(
+                id: "iosBackups", title: "iOS Device Backups", detail: "Local backups of iPhones and iPads; keep the ones you still need",
+                symbol: "externaldrive.badge.icloud", selectedByDefault: false,
+                candidates: {
+                    FileSizer.children(of: lib("Application Support/MobileSync/Backup"))
+                        .map { Candidate(url: $0, name: deviceBackupName($0)) }
+                }
+            ),
         ]
+    }
+
+    /// "Pau's iPhone · Mar 3, 2025" from a backup's Info.plist, or nil to fall back to the folder name.
+    static func deviceBackupName(_ backup: URL) -> String? {
+        guard let data = try? Data(contentsOf: backup.appending(path: "Info.plist")),
+              let info = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+              let device = info["Device Name"] as? String ?? info["Display Name"] as? String
+        else { return nil }
+        guard let date = info["Last Backup Date"] as? Date else { return device }
+        return "\(device) · \(date.formatted(date: .abbreviated, time: .omitted))"
     }
 
     /// Scans every category, reporting progress, and returns non-empty groups with items sorted by size.
