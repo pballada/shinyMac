@@ -1,3 +1,4 @@
+import AppKit
 import ShinyCore
 import SwiftUI
 
@@ -8,13 +9,39 @@ final class MonitorModel {
     private(set) var cpuHistory: [Double] = []
     private(set) var isFreeingMemory = false
     private(set) var freedMemory: Int64?
+    private(set) var topProcesses: [ProcessUsage] = []
+    var topMetric: ProcessList.Metric = .cpu {
+        didSet { Task { await refreshProcesses() } }
+    }
     @ObservationIgnored private let monitor = SystemMonitor()
 
     func run() async {
         refresh()
+        await refreshProcesses()
         while !Task.isCancelled {
             try? await Task.sleep(for: .seconds(2))
             refresh()
+            await refreshProcesses()
+        }
+    }
+
+    func refreshProcesses() async {
+        let metric = topMetric
+        topProcesses = await runInBackground { ProcessList.top(by: metric) } ?? topProcesses
+    }
+
+    /// The regular app behind a process group, if any, for its icon and the Quit button.
+    func app(for usage: ProcessUsage) -> NSRunningApplication? {
+        let running = NSWorkspace.shared.runningApplications
+        return running.first { usage.pids.contains($0.processIdentifier) && $0.activationPolicy == .regular }
+            ?? running.first { $0.localizedName == usage.name && $0.activationPolicy == .regular }
+    }
+
+    func quit(_ usage: ProcessUsage) {
+        app(for: usage)?.terminate()
+        Task {
+            try? await Task.sleep(for: .seconds(1))
+            await refreshProcesses()
         }
     }
 

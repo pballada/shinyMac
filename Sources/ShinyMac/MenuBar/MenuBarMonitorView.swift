@@ -54,6 +54,8 @@ struct MenuBarMonitorView: View {
                 NetworkCard(snapshot: snapshot)
             }
 
+            TopProcessesCard(model: model)
+
             HStack(spacing: 8) {
                 Button {
                     model.freeUpMemory()
@@ -160,6 +162,74 @@ private struct NetworkCard: View {
         Label("\(ByteFormat.string(Int64(bytesPerSecond)))/s", systemImage: symbol)
             .font(.system(size: 11.5, weight: .semibold))
             .monospacedDigit()
+    }
+}
+
+private struct TopProcessesCard: View {
+    @Bindable var model: MonitorModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("TOP APPS")
+                    .font(.system(size: 9.5, weight: .bold))
+                    .tracking(0.7)
+                    .foregroundStyle(.white.opacity(0.55))
+                Spacer()
+                Picker("Sort by", selection: $model.topMetric) {
+                    ForEach(ProcessList.Metric.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .controlSize(.mini)
+                .fixedSize()
+            }
+            ForEach(model.topProcesses) { usage in
+                ProcessRow(model: model, usage: usage)
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity)
+        .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+private struct ProcessRow: View {
+    let model: MonitorModel
+    let usage: ProcessUsage
+    @State private var isHovering = false
+
+    var body: some View {
+        let app = model.app(for: usage)
+        HStack(spacing: 8) {
+            Group {
+                if let icon = app?.icon {
+                    Image(nsImage: icon).resizable()
+                } else {
+                    Image(systemName: "gearshape.fill").foregroundStyle(.white.opacity(0.5))
+                }
+            }
+            .frame(width: 18, height: 18)
+            Text(usage.name).font(.system(size: 12, weight: .medium)).lineLimit(1)
+            if usage.processCount > 1 {
+                Text("\(usage.processCount)").font(.system(size: 9.5, weight: .bold)).foregroundStyle(.white.opacity(0.4))
+            }
+            Spacer(minLength: 4)
+            Text(model.topMetric == .cpu ? "\(Int(usage.cpu.rounded()))%" : ByteFormat.string(usage.memory))
+                .font(.system(size: 11.5, weight: .semibold))
+                .monospacedDigit()
+            if app != nil {
+                Button { model.quit(usage) } label: {
+                    Image(systemName: "xmark.circle.fill").font(.system(size: 12))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.white.opacity(isHovering ? 0.75 : 0.25))
+                .help("Quit \(usage.name)")
+            } else {
+                Color.clear.frame(width: 12)
+            }
+        }
+        .onHover { isHovering = $0 }
     }
 }
 
