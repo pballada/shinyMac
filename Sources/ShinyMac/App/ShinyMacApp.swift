@@ -11,9 +11,13 @@ struct ShinyMacApp: App {
             RootView()
                 .environment(state)
                 .frame(minWidth: 980, minHeight: 660)
+                #if DEBUG
+                .onAppear { DebugSnapshot.scheduleIfRequested(state: state) }
+                #endif
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1120, height: 740)
+        .windowBackgroundDragBehavior(.enabled)
     }
 }
 
