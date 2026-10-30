@@ -1,4 +1,4 @@
-.PHONY: build test app run icon clean
+.PHONY: build test app run icon release clean
 
 build:
 	swift build
@@ -14,6 +14,9 @@ run: app
 
 icon:
 	swift scripts/make-icon.swift
+
+release:
+	./scripts/release.sh $(VERSION)
 
 clean:
 	rm -rf .build build
