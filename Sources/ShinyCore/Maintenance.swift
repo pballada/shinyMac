@@ -10,6 +10,12 @@ public struct MaintenanceTask: Identifiable, Sendable, Hashable {
     public let recommended: Bool
     /// `/bin/sh` command line. Must be idempotent and safe to run at any time.
     public let command: String
+    /// The task only shows up when one of these executables exists (e.g. Homebrew).
+    var requiresAnyOf: [String] = []
+
+    public var isAvailable: Bool {
+        requiresAnyOf.isEmpty || requiresAnyOf.contains { FileManager.default.isExecutableFile(atPath: $0) }
+    }
 }
 
 public enum MaintenanceOutcome: Sendable, Equatable {
@@ -21,7 +27,12 @@ public enum MaintenanceOutcome: Sendable, Equatable {
 public enum Maintenance {
     static let lsregister = "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"
 
-    public static let tasks: [MaintenanceTask] = [
+    static let brewPaths = ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"]
+
+    /// Tasks that apply to this Mac.
+    public static var tasks: [MaintenanceTask] { allTasks.filter(\.isAvailable) }
+
+    static let allTasks: [MaintenanceTask] = [
         MaintenanceTask(
             id: "freeRAM", title: "Free Up RAM",
             detail: "Purges inactive memory so apps that need it get it right away.",
@@ -59,6 +70,13 @@ public enum Maintenance {
             detail: "Removes local snapshots that hold on to purgeable space.",
             symbol: "clock.arrow.circlepath", needsAdmin: true, recommended: false,
             command: "/usr/bin/tmutil thinlocalsnapshots / 999999999999 4"
+        ),
+        MaintenanceTask(
+            id: "homebrew", title: "Clean Up Homebrew",
+            detail: "Removes old versions of installed packages and Homebrew's download cache.",
+            symbol: "mug.fill", needsAdmin: false, recommended: true,
+            command: brewPaths.map { "[ -x \($0) ] && exec \($0) cleanup --prune=all" }.joined(separator: "; ") + "; exit 1",
+            requiresAnyOf: brewPaths
         ),
         MaintenanceTask(
             id: "mail", title: "Speed Up Mail",

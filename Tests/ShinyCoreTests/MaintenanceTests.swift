@@ -4,7 +4,19 @@ import Testing
 
 @Suite struct MaintenanceTests {
     @Test func taskIdentifiersAreUnique() {
-        #expect(Set(Maintenance.tasks.map(\.id)).count == Maintenance.tasks.count)
+        #expect(Set(Maintenance.allTasks.map(\.id)).count == Maintenance.allTasks.count)
+    }
+
+    @Test func toolDependentTasksHideWhenToolIsMissing() {
+        let task = MaintenanceTask(
+            id: "x", title: "", detail: "", symbol: "", needsAdmin: false, recommended: false, command: "true",
+            requiresAnyOf: ["/nonexistent/tool"]
+        )
+        #expect(!task.isAvailable)
+        let available = Maintenance.tasks.allSatisfy { $0.isAvailable }
+        #expect(available)
+        let homebrew = Maintenance.allTasks.first { $0.id == "homebrew" }
+        #expect(homebrew?.command.contains("cleanup --prune=all") == true)
     }
 
     @Test func batchScriptMarksEveryTask() {
