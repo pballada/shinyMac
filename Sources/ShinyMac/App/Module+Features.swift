@@ -63,6 +63,11 @@ extension Module {
                 Feature(symbol: "film.fill", title: "By kind", detail: "Videos, archives, disk images and more."),
                 Feature(symbol: "calendar", title: "By age", detail: "Files you haven't opened in a long time."),
             ]
+        case .duplicates:
+            [
+                Feature(symbol: "checkmark.seal.fill", title: "Byte-for-byte", detail: "Copies are confirmed with a full SHA-256, not just names or sizes."),
+                Feature(symbol: "star.fill", title: "Keeps the original", detail: "The oldest copy stays; extras go to the Trash."),
+            ]
         case .shredder:
             [
                 Feature(symbol: "hand.draw.fill", title: "Drag and drop", detail: "Drop files or folders to queue them."),
