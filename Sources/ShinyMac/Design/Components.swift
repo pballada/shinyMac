@@ -125,6 +125,7 @@ struct ModuleBusyView: View {
     let title: String
     var detail: String = ""
     var progress: Double?
+    var foundBytes: Int64?
     var stopTitle = "Stop"
     var onStop: (() -> Void)?
 
@@ -134,6 +135,14 @@ struct ModuleBusyView: View {
             HeroIllustration(symbol: module.symbol, theme: module.theme, size: 300, isBusy: true, progress: progress)
             VStack(spacing: 8) {
                 Text(title).font(.display(26, weight: .semibold))
+                if let foundBytes {
+                    Text("\(ByteFormat.string(foundBytes)) found so far")
+                        .font(.system(size: 14, weight: .medium))
+                        .monospacedDigit()
+                        .foregroundStyle(.white.opacity(0.75))
+                        .contentTransition(.numericText())
+                        .animation(.smooth, value: foundBytes)
+                }
                 Text(detail.isEmpty ? " " : detail)
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.55))
