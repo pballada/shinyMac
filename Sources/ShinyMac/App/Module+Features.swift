@@ -14,7 +14,7 @@ extension Module {
             [
                 Feature(symbol: "archivebox.fill", title: "Caches & logs", detail: "Temporary data apps and macOS rebuild on demand."),
                 Feature(symbol: "hammer.fill", title: "Developer junk", detail: "Xcode DerivedData, simulators, npm, Homebrew and more."),
-                Feature(symbol: "paperclip", title: "Mail downloads", detail: "Local copies of attachments you already opened."),
+                Feature(symbol: "photo.stack.fill", title: "Photo & Mail junk", detail: "Photos analysis caches and copies of attachments you already opened."),
             ]
         case .trash:
             [
