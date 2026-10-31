@@ -12,7 +12,7 @@ struct UpdaterView: View {
             case .checking:
                 ModuleBusyView(
                     module: .updater, title: "Checking for updates…",
-                    detail: model.feedCount > 0 ? "\(model.checkedCount) of \(model.feedCount) update feeds" : "",
+                    detail: model.feedCount > 0 ? "\(model.checkedCount) of \(model.feedCount) apps" : "",
                     progress: model.feedCount > 0 ? Double(model.checkedCount) / Double(model.feedCount) : nil
                 )
             case .ready:
@@ -48,7 +48,7 @@ private struct UpdateList: View {
                 Spacer()
                 HeroIllustration(symbol: "checkmark", theme: theme, size: 220)
                 Text("Everything is up to date").font(.display(26))
-                Text("No newer versions were found in your apps' update feeds.")
+                Text("No newer versions were found in your apps' update feeds or on the App Store.")
                     .foregroundStyle(.white.opacity(0.65))
                 Spacer()
             } else {
@@ -65,9 +65,6 @@ private struct UpdateList: View {
                         .padding(.vertical, 6)
                     }
                 }
-                Text("Apps from the App Store are updated from the App Store itself.")
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(.white.opacity(0.45))
             }
         }
         .padding(.horizontal, 24)
@@ -84,7 +81,15 @@ private struct UpdateRow: View {
         HStack(spacing: 14) {
             FileIconView(url: update.app.url, size: 44)
             VStack(alignment: .leading, spacing: 3) {
-                Text(update.app.name).font(.system(size: 14, weight: .semibold))
+                HStack(spacing: 6) {
+                    Text(update.app.name).font(.system(size: 14, weight: .semibold))
+                    if update.appStorePage != nil {
+                        Image(systemName: "bag.fill")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .help("From the App Store")
+                    }
+                }
                 HStack(spacing: 6) {
                     Text(update.installedVersion).foregroundStyle(.white.opacity(0.55))
                     Image(systemName: "arrow.right").font(.system(size: 9, weight: .bold)).foregroundStyle(.white.opacity(0.4))
@@ -99,9 +104,11 @@ private struct UpdateRow: View {
                 Button("What's New") { NSWorkspace.shared.open(notes) }
                     .buttonStyle(.glassPill)
             }
-            Button("Update") { model.open(update) }
+            Button(update.appStorePage == nil ? "Update" : "Open App Store") { model.open(update) }
                 .buttonStyle(.glassPill(prominent: true, tint: Module.updater.theme.accent))
-                .help("Opens \(update.app.name) so its built-in updater can install the new version")
+                .help(update.appStorePage == nil
+                    ? "Opens \(update.app.name) so its built-in updater can install the new version"
+                    : "Shows \(update.app.name) in the App Store, where you can install the update")
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
