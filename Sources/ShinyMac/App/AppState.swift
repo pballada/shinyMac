@@ -10,6 +10,13 @@ final class AppState {
         JunkScanner.scan(progress: progress)
     }
 
+    let cloud = CleanupModel(
+        module: .cloud, removalMode: .delete, verb: .offload, honorsTrashPreference: false,
+        confirmation: "The local copies are removed from this Mac. Your files stay in the cloud and download again when you open them."
+    ) { progress in
+        CloudScanner.scan(progress: progress)
+    }
+
     let trash = CleanupModel(
         module: .trash, removalMode: .delete, verb: .empty, honorsTrashPreference: false,
         confirmation: "Everything selected will be deleted permanently. This can't be undone."
@@ -63,6 +70,7 @@ final class AppState {
     func badge(for module: Module) -> String? {
         switch module {
         case .systemJunk: junk.badge
+        case .cloud: cloud.badge
         case .trash: trash.badge
         case .privacy: privacy.badge
         case .appPermissions: appPermissions.badge
@@ -106,6 +114,7 @@ final class AppState {
     func cleanupModel(for module: Module) -> CleanupModel? {
         switch module {
         case .systemJunk: junk
+        case .cloud: cloud
         case .trash: trash
         case .privacy: privacy
         case .leftovers: leftovers

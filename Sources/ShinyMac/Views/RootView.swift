@@ -71,6 +71,8 @@ struct DetailView: View {
             SmartCareView(model: state.smartCare)
         case .systemJunk:
             CleanupModuleView(model: state.junk)
+        case .cloud:
+            CleanupModuleView(model: state.cloud)
         case .trash:
             TrashModuleView(model: state.trash)
         case .privacy:

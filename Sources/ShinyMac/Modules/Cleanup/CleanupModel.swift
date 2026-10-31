@@ -10,13 +10,14 @@ final class CleanupModel {
 
     /// Wording for the primary action.
     enum Verb {
-        case clean, remove, empty
+        case clean, remove, empty, offload
 
         var title: String {
             switch self {
             case .clean: "Clean"
             case .remove: "Remove"
             case .empty: "Empty"
+            case .offload: "Free Up"
             }
         }
 
@@ -25,6 +26,7 @@ final class CleanupModel {
             case .clean: "Cleaning…"
             case .remove: "Removing…"
             case .empty: "Emptying…"
+            case .offload: "Removing downloads…"
             }
         }
     }

@@ -24,7 +24,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 /// Every feature screen in the app.
 enum Module: String, CaseIterable, Identifiable, Hashable {
     case smartCare
-    case systemJunk, trash
+    case systemJunk, cloud, trash
     case privacy, appPermissions
     case maintenance, loginItems
     case uninstaller, updater, leftovers, extensions
@@ -36,7 +36,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
     var section: SidebarSection {
         switch self {
         case .smartCare: .home
-        case .systemJunk, .trash: .cleanup
+        case .systemJunk, .cloud, .trash: .cleanup
         case .privacy, .appPermissions: .protection
         case .maintenance, .loginItems: .performance
         case .uninstaller, .updater, .leftovers, .extensions: .applications
@@ -49,6 +49,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .smartCare: "Smart Care"
         case .systemJunk: "System Junk"
+        case .cloud: "Cloud Cleanup"
         case .trash: "Trash Bins"
         case .privacy: "Privacy"
         case .appPermissions: "App Permissions"
@@ -70,6 +71,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .smartCare: "sparkles"
         case .systemJunk: "bubbles.and.sparkles.fill"
+        case .cloud: "icloud.fill"
         case .trash: "trash.fill"
         case .privacy: "hand.raised.fill"
         case .appPermissions: "lock.shield.fill"
@@ -92,6 +94,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .smartCare: "One scan to clean, speed up and tidy your Mac."
         case .systemJunk: "Clear caches, logs and developer clutter that pile up over time."
+        case .cloud: "Free up space taken by downloaded cloud files, without deleting them."
         case .trash: "Empty every Trash on your Mac, all at once."
         case .privacy: "Wipe browsing history, cookies and recent items."
         case .appPermissions: "See which apps can use your camera, microphone, screen and files."

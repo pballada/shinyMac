@@ -315,7 +315,7 @@ struct CleanupDoneView: View {
             Spacer()
             HeroIllustration(symbol: "checkmark", theme: theme, size: 230)
             BigSize(bytes: model.report.removedBytes, size: 60)
-            Text(model.lastMode == .trash ? "moved to the Trash" : "cleaned up")
+            Text(model.verb == .offload ? "freed up, still safe in the cloud" : model.lastMode == .trash ? "moved to the Trash" : "cleaned up")
                 .font(.system(size: 16))
                 .foregroundStyle(.white.opacity(0.7))
 
