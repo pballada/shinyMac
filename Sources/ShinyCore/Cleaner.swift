@@ -32,6 +32,17 @@ public enum Cleaner {
             if Task.isCancelled { break }
             progress?.update(detail: Paths.abbreviated(item.url), fraction: Double(index) / Double(max(items.count, 1)))
 
+            if item.removal == .evictDownload {
+                do {
+                    try CloudScanner.evict(item.url)
+                    report.removedBytes += item.size
+                    report.removed.append(item.url)
+                } catch {
+                    report.failures.append(Failure(url: item.url, reason: (error as NSError).localizedDescription, needsAdmin: false))
+                }
+                continue
+            }
+
             if let tool = toolCommand(for: item.removal) {
                 runTool(tool, for: item, into: &report)
                 continue
@@ -96,7 +107,7 @@ public enum Cleaner {
     /// Items that a developer tool removes rather than the file system.
     static func toolCommand(for removal: Removal) -> [String]? {
         switch removal {
-        case .file, .moveToTrash: nil
+        case .file, .moveToTrash, .evictDownload: nil
         case .simulator(let udid): ["simctl", "delete", udid]
         case .simulatorRuntime(let identifier): ["simctl", "runtime", "delete", identifier]
         }

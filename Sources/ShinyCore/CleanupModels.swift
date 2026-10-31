@@ -37,6 +37,8 @@ public enum Removal: Hashable, Sendable {
     case simulator(udid: String)
     /// A simulator runtime disk image, deleted with `simctl runtime`.
     case simulatorRuntime(identifier: String)
+    /// A cloud file's local copy: the download is removed and the file stays in the cloud.
+    case evictDownload
 }
 
 /// A themed bucket of cleanup items, e.g. "User Caches".

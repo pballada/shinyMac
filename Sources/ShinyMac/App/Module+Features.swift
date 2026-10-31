@@ -16,6 +16,11 @@ extension Module {
                 Feature(symbol: "hammer.fill", title: "Developer junk", detail: "Xcode DerivedData, simulators, npm, Homebrew and more."),
                 Feature(symbol: "photo.stack.fill", title: "Photo & Mail junk", detail: "Photos analysis caches and copies of attachments you already opened."),
             ]
+        case .cloud:
+            [
+                Feature(symbol: "icloud.fill", title: "Every cloud", detail: "iCloud Drive, Dropbox, Google Drive, OneDrive and Box."),
+                Feature(symbol: "arrow.down.to.line.compact", title: "Downloads only", detail: "Files stay in the cloud and download again when you open them."),
+            ]
         case .trash:
             [
                 Feature(symbol: "trash.fill", title: "Every Trash", detail: "Your Trash and the ones on external drives."),
