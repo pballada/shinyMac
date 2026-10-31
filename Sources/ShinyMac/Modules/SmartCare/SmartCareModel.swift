@@ -112,6 +112,7 @@ final class SmartCareModel {
                 for await result in group { apply(result) }
             }
             try? await Task.sleep(for: .milliseconds(400))
+            UserDefaults.standard.set(Date.now, forKey: Preferences.Key.lastSmartCareScan)
             withAnimation(.smooth) { phase = .results }
         }
     }

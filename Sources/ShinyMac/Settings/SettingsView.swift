@@ -6,6 +6,7 @@ struct SettingsView: View {
     @AppStorage(Preferences.Key.alwaysUseTrash) private var alwaysUseTrash = false
     @AppStorage(Preferences.Key.showMenuBarMonitor) private var showMenuBarMonitor = true
     @AppStorage(Preferences.Key.spaceAlerts) private var spaceAlerts = true
+    @AppStorage(Preferences.Key.careSchedule) private var careSchedule = CareSchedule.weekly.rawValue
     @State private var hasFullDiskAccess = Permissions.hasFullDiskAccess
 
     var body: some View {
@@ -28,6 +29,12 @@ struct SettingsView: View {
                 Toggle(isOn: $spaceAlerts) {
                     Text("Warn me when space runs low")
                     Text("At most once a day, when free space drops below 10% or the Trash passes 5 GB.")
+                }
+                Picker(selection: $careSchedule) {
+                    ForEach(CareSchedule.allCases) { Text($0.title).tag($0.rawValue) }
+                } label: {
+                    Text("Remind me to run Smart Care")
+                    Text("Counted from your last Smart Care scan. The reminder says how much junk is waiting.")
                 }
             }
 
