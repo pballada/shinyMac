@@ -26,6 +26,12 @@ extension Module {
                 Feature(symbol: "safari.fill", title: "Browsers", detail: "History, cookies and caches for Safari, Chrome, Firefox, Edge, Brave and Arc."),
                 Feature(symbol: "clock.arrow.circlepath", title: "Recent items", detail: "Lists of documents and apps you opened recently."),
             ]
+        case .appPermissions:
+            [
+                Feature(symbol: "camera.fill", title: "Camera, mic & screen", detail: "Every app allowed to see or hear what you do."),
+                Feature(symbol: "accessibility", title: "Powerful access", detail: "Accessibility, Input Monitoring, Full Disk Access and Automation."),
+                Feature(symbol: "app.badge.checkmark", title: "Stale grants", detail: "Permissions still held by apps you've deleted."),
+            ]
         case .maintenance:
             [
                 Feature(symbol: "memorychip.fill", title: "Free up RAM", detail: "Release inactive memory in one click."),
