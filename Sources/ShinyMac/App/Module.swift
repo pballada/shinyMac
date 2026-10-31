@@ -25,7 +25,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
 enum Module: String, CaseIterable, Identifiable, Hashable {
     case smartCare
     case systemJunk, trash
-    case privacy
+    case privacy, appPermissions
     case maintenance, loginItems
     case uninstaller, updater, leftovers, extensions
     case largeFiles, duplicates, spaceLens, shredder
@@ -37,7 +37,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .smartCare: .home
         case .systemJunk, .trash: .cleanup
-        case .privacy: .protection
+        case .privacy, .appPermissions: .protection
         case .maintenance, .loginItems: .performance
         case .uninstaller, .updater, .leftovers, .extensions: .applications
         case .largeFiles, .duplicates, .spaceLens, .shredder: .files
@@ -51,6 +51,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .systemJunk: "System Junk"
         case .trash: "Trash Bins"
         case .privacy: "Privacy"
+        case .appPermissions: "App Permissions"
         case .maintenance: "Maintenance"
         case .loginItems: "Login Items"
         case .uninstaller: "Uninstaller"
@@ -71,6 +72,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .systemJunk: "bubbles.and.sparkles.fill"
         case .trash: "trash.fill"
         case .privacy: "hand.raised.fill"
+        case .appPermissions: "lock.shield.fill"
         case .maintenance: "wrench.and.screwdriver.fill"
         case .loginItems: "power.circle.fill"
         case .uninstaller: "shippingbox.fill"
@@ -92,6 +94,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .systemJunk: "Clear caches, logs and developer clutter that pile up over time."
         case .trash: "Empty every Trash on your Mac, all at once."
         case .privacy: "Wipe browsing history, cookies and recent items."
+        case .appPermissions: "See which apps can use your camera, microphone, screen and files."
         case .maintenance: "Run tune-up tasks that keep macOS fast and healthy."
         case .loginItems: "Control what launches quietly in the background."
         case .uninstaller: "Remove apps completely, along with every file they left behind."

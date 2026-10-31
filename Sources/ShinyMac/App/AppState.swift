@@ -25,6 +25,7 @@ final class AppState {
         PrivacyScanner.scan(progress: progress)
     }
 
+    let appPermissions = AppPermissionsModel()
     let uninstaller = UninstallerModel()
 
     let extensions = CleanupModel(module: .extensions, removalMode: .trash, verb: .remove) { progress in
@@ -64,6 +65,7 @@ final class AppState {
         case .systemJunk: junk.badge
         case .trash: trash.badge
         case .privacy: privacy.badge
+        case .appPermissions: appPermissions.badge
         case .leftovers: leftovers.badge
         case .extensions: extensions.phase == .results ? "\(extensions.groups.reduce(0) { $0 + $1.items.count })" : nil
         case .largeFiles: largeFiles.badge
@@ -88,6 +90,7 @@ final class AppState {
         if selection == .spaceLens { spaceLens.scan(); return }
         if selection == .maintenance { maintenance.showTasks(); return }
         if selection == .loginItems { loginItems.load(); return }
+        if selection == .appPermissions { appPermissions.load(); return }
         if selection == .updater { updater.check(); return }
         guard let model = cleanupModel(for: selection) else { return }
         model.scan()

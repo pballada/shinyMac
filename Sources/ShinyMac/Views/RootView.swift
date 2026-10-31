@@ -75,6 +75,8 @@ struct DetailView: View {
             TrashModuleView(model: state.trash)
         case .privacy:
             PrivacyModuleView(model: state.privacy)
+        case .appPermissions:
+            AppPermissionsView(model: state.appPermissions)
         case .uninstaller:
             UninstallerView(model: state.uninstaller)
         case .leftovers:
