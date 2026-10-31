@@ -54,3 +54,34 @@ import Testing
         #expect(latest.shortVersion == "2.10")
     }
 }
+
+@Suite struct AppStoreUpdateTests {
+    private func app(_ bundleID: String, version: String) -> InstalledApp {
+        InstalledApp(
+            url: URL(filePath: "/Applications/\(bundleID).app"), name: bundleID, bundleID: bundleID, version: version,
+            bundleName: nil, isAppStore: true, lastUsed: nil
+        )
+    }
+
+    @Test func batchesBundleIDsIntoOneLookup() throws {
+        let url = try #require(UpdateChecker.appStoreLookupURL(for: [app("a.one", version: "1"), app("b.two", version: "1")], country: "ES"))
+        let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        #expect(items.first { $0.name == "bundleId" }?.value == "a.one,b.two")
+        #expect(items.first { $0.name == "country" }?.value == "es")
+        #expect(Array(1...120).chunked(into: 50).map(\.count) == [50, 50, 20])
+    }
+
+    @Test func reportsNewerCompatibleVersions() {
+        let lookup = Data("""
+        {"resultCount": 3, "results": [
+          {"bundleId": "a.one", "version": "2.1", "trackId": 123, "minimumOsVersion": "14.0"},
+          {"bundleId": "b.two", "version": "1.0"},
+          {"bundleId": "c.three", "version": "9.0", "minimumOsVersion": "99.0"}
+        ]}
+        """.utf8)
+        let apps = [app("a.one", version: "2.0.5"), app("b.two", version: "1.0"), app("c.three", version: "1.0")]
+        let updates = UpdateChecker.appStoreUpdates(for: apps, lookup: lookup, systemVersion: "Version 26.1 (Build 25B78)")
+        #expect(updates.map(\.app.bundleID) == ["a.one"], "Same version and too-new macOS requirements are skipped")
+        #expect(updates.first?.appStorePage?.absoluteString == "macappstore://apps.apple.com/app/id123")
+    }
+}

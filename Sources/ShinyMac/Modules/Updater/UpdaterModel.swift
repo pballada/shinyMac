@@ -22,7 +22,7 @@ final class UpdaterModel {
         checkedCount = 0
         Task {
             let apps = await runInBackground { AppScanner.installedApps() } ?? []
-            feedCount = await runInBackground { UpdateChecker.feeds(for: apps).count } ?? 0
+            feedCount = await runInBackground { UpdateChecker.checkableCount(apps) } ?? 0
             let counter = Atomic<Int>(0)
             let poll = Task {
                 while !Task.isCancelled {
@@ -48,8 +48,12 @@ final class UpdaterModel {
         withAnimation(.smooth) { phase = .ready }
     }
 
-    /// Opening the app lets its built-in updater take over.
+    /// App Store apps open their store page; others open so their built-in updater takes over.
     func open(_ update: AppUpdate) {
+        if let page = update.appStorePage {
+            NSWorkspace.shared.open(page)
+            return
+        }
         NSWorkspace.shared.openApplication(at: update.app.url, configuration: NSWorkspace.OpenConfiguration())
     }
 }

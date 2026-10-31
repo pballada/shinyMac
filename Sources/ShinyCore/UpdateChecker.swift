@@ -1,6 +1,6 @@
 import Foundation
 
-/// A newer version published in an app's Sparkle update feed.
+/// A newer version published in an app's Sparkle update feed or on the App Store.
 public struct AppUpdate: Identifiable, Hashable, Sendable {
     public var id: URL { app.url }
     public let app: InstalledApp
@@ -8,6 +8,8 @@ public struct AppUpdate: Identifiable, Hashable, Sendable {
     public let latestVersion: String
     public let releaseNotes: URL?
     public let download: URL?
+    /// Set for App Store apps: the app's page, where the update is installed.
+    public var appStorePage: URL? = nil
 }
 
 /// One `<item>` in a Sparkle appcast.
@@ -22,7 +24,8 @@ struct AppcastItem: Equatable {
     var displayVersion: String? { shortVersion ?? build }
 }
 
-/// Checks Sparkle appcasts (`SUFeedURL`), which most apps distributed outside the App Store use.
+/// Checks Sparkle appcasts (`SUFeedURL`), which most apps distributed outside the App Store use,
+/// and the App Store's public lookup API for App Store apps.
 public enum UpdateChecker {
     /// Apps that declare a Sparkle feed, paired with it.
     public static func feeds(for apps: [InstalledApp]) -> [(InstalledApp, URL)] {
@@ -36,27 +39,80 @@ public enum UpdateChecker {
         }
     }
 
-    /// Fetches every feed concurrently and returns apps with a newer stable release.
+    /// Apps installed from the Mac App Store, which have no Sparkle feed.
+    public static func appStoreApps(in apps: [InstalledApp]) -> [InstalledApp] {
+        apps.filter(\.isAppStore)
+    }
+
+    /// How many apps `check` can look up: those with a Sparkle feed plus App Store apps.
+    public static func checkableCount(_ apps: [InstalledApp]) -> Int {
+        feeds(for: apps).count + appStoreApps(in: apps).count
+    }
+
+    /// Fetches every feed and App Store listing concurrently and returns apps with a newer stable release.
+    /// `onChecked` runs once per app counted by `checkableCount`.
     public static func check(_ apps: [InstalledApp], onChecked: @escaping @Sendable () -> Void = {}) async -> [AppUpdate] {
         let feeds = feeds(for: apps)
+        let storeBatches = appStoreApps(in: apps).chunked(into: appStoreBatchSize)
         let session = URLSession(configuration: {
             let configuration = URLSessionConfiguration.ephemeral
             configuration.timeoutIntervalForRequest = 15
             return configuration
         }())
-        return await withTaskGroup(of: AppUpdate?.self) { group in
+        return await withTaskGroup(of: [AppUpdate].self) { group in
             for (app, feed) in feeds {
                 group.addTask {
                     defer { onChecked() }
-                    guard let (data, _) = try? await session.data(from: feed) else { return nil }
-                    return update(for: app, appcast: parseAppcast(data))
+                    guard let (data, _) = try? await session.data(from: feed) else { return [] }
+                    return update(for: app, appcast: parseAppcast(data)).map { [$0] } ?? []
+                }
+            }
+            for batch in storeBatches {
+                group.addTask {
+                    defer { batch.forEach { _ in onChecked() } }
+                    guard let url = appStoreLookupURL(for: batch), let (data, _) = try? await session.data(from: url) else { return [] }
+                    return appStoreUpdates(for: batch, lookup: data)
                 }
             }
             var updates: [AppUpdate] = []
-            for await update in group {
-                if let update { updates.append(update) }
-            }
+            for await found in group { updates += found }
             return updates.sorted { $0.app.name.localizedStandardCompare($1.app.name) == .orderedAscending }
+        }
+    }
+
+    // MARK: App Store
+
+    static let appStoreBatchSize = 50
+
+    /// The public iTunes lookup API accepts a comma-separated list of bundle identifiers.
+    static func appStoreLookupURL(for apps: [InstalledApp], country: String? = Locale.current.region?.identifier) -> URL? {
+        var components = URLComponents(string: "https://itunes.apple.com/lookup")
+        components?.queryItems = [
+            URLQueryItem(name: "bundleId", value: apps.map(\.bundleID).joined(separator: ",")),
+            URLQueryItem(name: "entity", value: "desktopSoftware"),
+        ] + (country.map { [URLQueryItem(name: "country", value: $0.lowercased())] } ?? [])
+        return components?.url
+    }
+
+    /// Newer versions in a lookup response that also run on this version of macOS.
+    static func appStoreUpdates(
+        for apps: [InstalledApp], lookup data: Data,
+        systemVersion: String = ProcessInfo.processInfo.operatingSystemVersionString
+    ) -> [AppUpdate] {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let results = json["results"] as? [[String: Any]] else { return [] }
+        let byBundleID = Dictionary(apps.map { ($0.bundleID, $0) }, uniquingKeysWith: { first, _ in first })
+        let system = normalized(systemVersion.replacingOccurrences(of: "Version ", with: ""))
+        return results.compactMap { result in
+            guard let bundleID = result["bundleId"] as? String, let app = byBundleID[bundleID],
+                  let latest = result["version"] as? String, let installed = app.version,
+                  isNewer(latest, than: installed) else { return nil }
+            if let minimum = result["minimumOsVersion"] as? String, isNewer(minimum, than: system) { return nil }
+            let page = (result["trackId"] as? NSNumber).flatMap { URL(string: "macappstore://apps.apple.com/app/id\($0.int64Value)") }
+            return AppUpdate(
+                app: app, installedVersion: installed, latestVersion: latest, releaseNotes: nil, download: nil,
+                appStorePage: page ?? (result["trackViewUrl"] as? String).flatMap(URL.init(string:))
+            )
         }
     }
 
@@ -109,6 +165,12 @@ public enum UpdateChecker {
     private static func infoPlist(of app: InstalledApp) -> [String: Any]? {
         guard let data = try? Data(contentsOf: app.url.appending(path: "Contents/Info.plist")) else { return nil }
         return try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+    }
+}
+
+extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        stride(from: 0, to: count, by: size).map { Array(self[$0..<Swift.min($0 + size, count)]) }
     }
 }
 

@@ -102,7 +102,7 @@ final class SmartCareModel {
                     let apps = AppScanner.installedApps()
                     let orphans = await runInBackground { OrphanFinder.scan(installed: apps, progress: ScanProgress()) } ?? []
                     let updates = await UpdateChecker.check(apps)
-                    return .applications(leftovers: orphans, updates: updates, feeds: UpdateChecker.feeds(for: apps).count)
+                    return .applications(leftovers: orphans, updates: updates, feeds: UpdateChecker.checkableCount(apps))
                 }
                 group.addTask {
                     .largeFiles(await runInBackground {

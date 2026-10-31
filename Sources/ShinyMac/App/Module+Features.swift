@@ -57,7 +57,7 @@ extension Module {
         case .updater:
             [
                 Feature(symbol: "arrow.down.circle.fill", title: "Version check", detail: "Compares installed versions with each app's update feed."),
-                Feature(symbol: "bag.fill", title: "App Store", detail: "Jump straight to pending App Store updates."),
+                Feature(symbol: "bag.fill", title: "App Store apps too", detail: "Looks up each App Store app and opens its page to update."),
             ]
         case .leftovers:
             [
