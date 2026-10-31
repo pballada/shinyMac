@@ -10,8 +10,18 @@ final class UninstallerModel {
         case all = "All"
         case unused = "Unused"
         case large = "Large"
+        case intel = "Intel"
         case appStore = "App Store"
         var id: Self { self }
+
+        /// Every Intel Mac app is "Intel only", so that filter only makes sense on Apple silicon.
+        static var available: [Filter] {
+            #if arch(arm64)
+            allCases
+            #else
+            allCases.filter { $0 != .intel }
+            #endif
+        }
     }
 
     enum Sort: String, CaseIterable, Identifiable {
@@ -60,6 +70,7 @@ final class UninstallerModel {
             case .all: return true
             case .unused: return isUnused(app)
             case .large: return (sizes[app.url] ?? 0) >= Self.largeThreshold
+            case .intel: return app.isIntelOnly
             case .appStore: return app.isAppStore
             }
         }
@@ -76,6 +87,7 @@ final class UninstallerModel {
         case .all: apps.count
         case .unused: apps.count(where: isUnused)
         case .large: apps.count { (sizes[$0.url] ?? 0) >= Self.largeThreshold }
+        case .intel: apps.count(where: \.isIntelOnly)
         case .appStore: apps.count(where: \.isAppStore)
         }
     }

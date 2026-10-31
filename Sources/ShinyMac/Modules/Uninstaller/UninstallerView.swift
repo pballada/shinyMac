@@ -77,7 +77,7 @@ private struct AppListPane: View {
 
                 ScrollView(.horizontal) {
                     HStack(spacing: 6) {
-                        ForEach(UninstallerModel.Filter.allCases) { filter in
+                        ForEach(UninstallerModel.Filter.available) { filter in
                             FilterChip(
                                 title: filter.rawValue, count: model.count(for: filter), isOn: model.filter == filter,
                                 tint: Module.uninstaller.theme.accent
@@ -149,7 +149,18 @@ private struct AppRow: View {
             HStack(spacing: 10) {
                 FileIconView(url: app.url, size: 34)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(app.name).font(.system(size: 13, weight: .semibold)).lineLimit(1)
+                    HStack(spacing: 5) {
+                        Text(app.name).font(.system(size: 13, weight: .semibold)).lineLimit(1)
+                        if app.isIntelOnly {
+                            Text("INTEL")
+                                .font(.system(size: 8.5, weight: .heavy))
+                                .tracking(0.5)
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 1.5)
+                                .background(.white.opacity(0.14), in: Capsule())
+                                .foregroundStyle(.white.opacity(0.75))
+                        }
+                    }
                     Text(subtitle)
                         .font(.system(size: 11))
                         .foregroundStyle(.white.opacity(0.5))
@@ -230,6 +241,10 @@ private struct AppDetailPane: View {
                         StatPill(symbol: "clock", text: "Opened \(lastUsed.formatted(.relative(presentation: .named)))")
                     }
                     if app.isAppStore { StatPill(symbol: "bag", text: "App Store") }
+                    if app.isIntelOnly {
+                        StatPill(symbol: "cpu", text: "Intel only")
+                            .help("Runs through Rosetta on Apple silicon. Look for an updated version or an alternative.")
+                    }
                 }
                 .padding(.top, 2)
             }
