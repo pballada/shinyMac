@@ -12,8 +12,13 @@ public struct InstalledApp: Identifiable, Hashable, Sendable {
     public let bundleName: String?
     public let isAppStore: Bool
     public let lastUsed: Date?
+    /// Built only for Intel Macs, so it needs Rosetta on Apple silicon.
+    public let isIntelOnly: Bool
 
-    public init(url: URL, name: String, bundleID: String, version: String?, bundleName: String?, isAppStore: Bool, lastUsed: Date?) {
+    public init(
+        url: URL, name: String, bundleID: String, version: String?, bundleName: String?, isAppStore: Bool, lastUsed: Date?,
+        isIntelOnly: Bool = false
+    ) {
         self.url = url
         self.name = name
         self.bundleID = bundleID
@@ -21,6 +26,7 @@ public struct InstalledApp: Identifiable, Hashable, Sendable {
         self.bundleName = bundleName
         self.isAppStore = isAppStore
         self.lastUsed = lastUsed
+        self.isIntelOnly = isIntelOnly
     }
 
     public var identity: AppIdentity {
@@ -76,7 +82,8 @@ public enum AppScanner {
             version: info["CFBundleShortVersionString"] as? String ?? info["CFBundleVersion"] as? String,
             bundleName: info["CFBundleName"] as? String,
             isAppStore: FileManager.default.fileExists(atPath: receipt),
-            lastUsed: lastUsedDate(of: url)
+            lastUsed: lastUsedDate(of: url),
+            isIntelOnly: MachO.executable(ofApp: url, info: info).map { MachO.isIntelOnly(MachO.architectures(of: $0)) } ?? false
         )
     }
 

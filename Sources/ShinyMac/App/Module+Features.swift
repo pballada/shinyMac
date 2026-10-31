@@ -41,7 +41,7 @@ extension Module {
             [
                 Feature(symbol: "trash.slash.fill", title: "Complete removal", detail: "Apps plus their support files, caches and preferences."),
                 Feature(symbol: "arrow.counterclockwise", title: "Reset apps", detail: "Keep the app, wipe its settings to start fresh."),
-                Feature(symbol: "clock.fill", title: "Unused apps", detail: "Spot apps you haven't opened in months."),
+                Feature(symbol: "clock.fill", title: "Forgotten apps", detail: "Apps you haven't opened in months, and Intel-only apps that need Rosetta."),
             ]
         case .updater:
             [
