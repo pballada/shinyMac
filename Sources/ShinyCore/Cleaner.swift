@@ -32,13 +32,18 @@ public enum Cleaner {
             if Task.isCancelled { break }
             progress?.update(detail: Paths.abbreviated(item.url), fraction: Double(index) / Double(max(items.count, 1)))
 
+            if let tool = toolCommand(for: item.removal) {
+                runTool(tool, for: item, into: &report)
+                continue
+            }
+
             guard SafetyGuard.canRemove(item.url) else {
                 report.failures.append(Failure(url: item.url, reason: "Protected location", needsAdmin: false))
                 continue
             }
 
             do {
-                switch mode {
+                switch item.removal == .moveToTrash ? .trash : mode {
                 case .trash: try fileManager.trashItem(at: item.url, resultingItemURL: nil)
                 case .delete: try fileManager.removeItem(at: item.url)
                 }
@@ -86,6 +91,30 @@ public enum Cleaner {
             }
         }
         return report
+    }
+
+    /// Items that a developer tool removes rather than the file system.
+    static func toolCommand(for removal: Removal) -> [String]? {
+        switch removal {
+        case .file, .moveToTrash: nil
+        case .simulator(let udid): ["simctl", "delete", udid]
+        case .simulatorRuntime(let identifier): ["simctl", "runtime", "delete", identifier]
+        }
+    }
+
+    private static func runTool(_ arguments: [String], for item: CleanupItem, into report: inout Report) {
+        do {
+            let result = try Shell.run("/usr/bin/xcrun", arguments)
+            if result.succeeded {
+                report.removedBytes += item.size
+                report.removed.append(item.url)
+            } else {
+                let reason = result.output.split(whereSeparator: \.isNewline).last.map(String.init) ?? "xcrun failed"
+                report.failures.append(Failure(url: item.url, reason: reason, needsAdmin: false))
+            }
+        } catch {
+            report.failures.append(Failure(url: item.url, reason: error.localizedDescription, needsAdmin: false))
+        }
     }
 
     static func exists(_ url: URL) -> Bool {
