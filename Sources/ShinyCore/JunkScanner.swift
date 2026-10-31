@@ -39,6 +39,17 @@ public enum JunkScanner {
         (".cargo/registry/cache", "Cargo registry cache"), (".bun/install/cache", "Bun install cache"),
     ]
 
+    /// Photos' background services keep caches in their own sandbox containers; macOS rebuilds them on demand.
+    static let photoServiceContainers: [(id: String, name: String)] = [
+        ("com.apple.mediaanalysisd", "Media analysis cache"), ("com.apple.photoanalysisd", "Photo analysis cache"),
+        ("com.apple.photolibraryd", "Photo library service cache"), ("com.apple.Photos", "Photos cache"),
+        ("com.apple.photos.ImageConversionService", "Image conversion cache"),
+        ("com.apple.PhotosUIPrivate.PhotosPosterProvider", "Photo wallpaper cache"),
+    ]
+
+    /// Libraries from apps Photos replaced. After migration they can share storage with the Photos library.
+    static let legacyPhotoLibraryExtensions: Set<String> = ["migratedphotolibrary", "aplibrary", "migratedaplibrary"]
+
     static let installerExtensions: Set<String> = ["dmg", "pkg", "mpkg", "xip"]
 
     /// Downloads untouched for this long are offered (unchecked) for cleanup.
@@ -86,6 +97,30 @@ public enum JunkScanner {
                 id: "mail", title: "Mail Downloads", detail: "Copies of attachments you opened in Mail",
                 symbol: "paperclip", selectedByDefault: true,
                 candidates: { children(lib("Containers/com.apple.mail/Data/Library/Mail Downloads")) }
+            ),
+            Category(
+                id: "photoJunk", title: "Photo Junk", detail: "Caches from Photos' analysis services, rebuilt in the background",
+                symbol: "photo.stack.fill", selectedByDefault: true,
+                candidates: {
+                    // The contents, not the Caches folder itself, which sandboxed services expect to exist.
+                    photoServiceContainers.flatMap { service in
+                        children(lib("Containers/\(service.id)/Data/Library/Caches"))
+                            .map { Candidate(url: $0.url, name: "\(service.name) · \($0.url.lastPathComponent)") }
+                    }
+                }
+            ),
+            Category(
+                id: "oldPhotoLibraries", title: "Old Photo Libraries", detail: "iPhoto and Aperture libraries already imported into Photos",
+                symbol: "photo.on.rectangle.angled", selectedByDefault: false,
+                candidates: {
+                    FileSizer.children(of: home.appending(path: "Pictures", directoryHint: .isDirectory))
+                        .filter { url in
+                            let name = url.lastPathComponent
+                            return legacyPhotoLibraryExtensions.contains(url.pathExtension.lowercased())
+                                || (name.hasPrefix("iPhoto Library") && url.pathExtension != "photoslibrary")
+                        }
+                        .map { Candidate(url: $0) }
+                }
             ),
             Category(
                 id: "brokenPrefs", title: "Broken Preferences", detail: "Settings files that are corrupted and can't be read",

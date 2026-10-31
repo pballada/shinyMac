@@ -30,6 +30,23 @@ import Testing
         #expect(byID["mail"] == nil, "Empty categories are dropped")
     }
 
+    @Test func findsPhotoJunkWithoutTouchingThePhotosLibrary() throws {
+        let home = try TempFolder()
+        try home.file("Library/Containers/com.apple.mediaanalysisd/Data/Library/Caches/Analysis/blob", bytes: 30_000)
+        try home.file("Pictures/Photos Library.photoslibrary/resources/caches/x", bytes: 30_000)
+        try home.file("Pictures/iPhoto Library.migratedphotolibrary/Masters/a.jpg", bytes: 20_000)
+        try home.file("Pictures/Vacation.aplibrary/Database/db", bytes: 10_000)
+
+        let groups = Dictionary(uniqueKeysWithValues: JunkScanner.scan(home: home.url, progress: ScanProgress()).map { ($0.id, $0) })
+        let photoJunk = try #require(groups["photoJunk"])
+        #expect(photoJunk.items.map(\.name) == ["Media analysis cache · Analysis"])
+        #expect(photoJunk.items.allSatisfy { !$0.url.path().contains("photoslibrary") })
+
+        let libraries = try #require(groups["oldPhotoLibraries"])
+        #expect(!libraries.selectedByDefault)
+        #expect(Set(libraries.items.map(\.name)) == ["iPhoto Library.migratedphotolibrary", "Vacation.aplibrary"])
+    }
+
     @Test func detectsBrokenPropertyLists() throws {
         let temp = try TempFolder()
         let good = temp.url.appending(path: "good.plist")
