@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Groups shown in the sidebar, in display order.
 enum SidebarSection: String, CaseIterable, Identifiable {
-    case home, cleanup, protection, performance, applications, files
+    case home, cleanup, protection, performance, applications, files, developer
 
     var id: Self { self }
 
@@ -14,6 +14,7 @@ enum SidebarSection: String, CaseIterable, Identifiable {
         case .performance: "Performance"
         case .applications: "Applications"
         case .files: "Files"
+        case .developer: "Developer"
         }
     }
 
@@ -28,6 +29,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
     case maintenance, loginItems
     case uninstaller, updater, leftovers, extensions
     case largeFiles, duplicates, spaceLens, shredder
+    case xcode
 
     var id: Self { self }
 
@@ -39,6 +41,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .maintenance, .loginItems: .performance
         case .uninstaller, .updater, .leftovers, .extensions: .applications
         case .largeFiles, .duplicates, .spaceLens, .shredder: .files
+        case .xcode: .developer
         }
     }
 
@@ -58,6 +61,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .duplicates: "Duplicates"
         case .spaceLens: "Space Lens"
         case .shredder: "Shredder"
+        case .xcode: "Xcode"
         }
     }
 
@@ -77,6 +81,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .duplicates: "doc.on.doc.fill"
         case .spaceLens: "chart.pie.fill"
         case .shredder: "flame.fill"
+        case .xcode: "hammer.fill"
         }
     }
 
@@ -97,6 +102,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .duplicates: "Find identical files and keep just one copy."
         case .spaceLens: "See what takes up space, at a glance."
         case .shredder: "Delete files right away, skipping the Trash."
+        case .xcode: "Reclaim the gigabytes Xcode, simulators and builds pile up."
         }
     }
 }

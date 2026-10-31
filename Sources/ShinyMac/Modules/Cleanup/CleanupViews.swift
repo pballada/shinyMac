@@ -269,11 +269,12 @@ struct CleanupItemRow: View {
                 Text(title)
                     .font(.system(size: 13, weight: .medium))
                     .lineLimit(1)
-                Text(Paths.abbreviated(item.url))
+                Text(item.note ?? Paths.abbreviated(item.url))
                     .font(.system(size: 11))
                     .foregroundStyle(.white.opacity(0.45))
                     .lineLimit(1)
                     .truncationMode(.middle)
+                    .help(Paths.abbreviated(item.url))
             }
             Spacer(minLength: 8)
             if isKeeper {

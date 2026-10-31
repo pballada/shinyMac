@@ -73,6 +73,12 @@ extension Module {
                 Feature(symbol: "hand.draw.fill", title: "Drag and drop", detail: "Drop files or folders to queue them."),
                 Feature(symbol: "flame.fill", title: "No Trash detour", detail: "Gone immediately, including stubborn locked items."),
             ]
+        case .xcode:
+            [
+                Feature(symbol: "square.stack.3d.down.right.fill", title: "Simulator runtimes", detail: "Old iOS and visionOS images, several GB each."),
+                Feature(symbol: "ipad.and.iphone", title: "Simulators", detail: "Devices left behind by runtimes you removed."),
+                Feature(symbol: "hammer.fill", title: "Builds & archives", detail: "DerivedData per project, device support and old archives."),
+            ]
         case .spaceLens:
             [
                 Feature(symbol: "chart.pie.fill", title: "Visual map", detail: "An interactive sunburst of your folders."),

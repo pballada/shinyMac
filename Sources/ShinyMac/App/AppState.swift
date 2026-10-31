@@ -43,6 +43,13 @@ final class AppState {
     let duplicates = CleanupModel(module: .duplicates, removalMode: .trash, verb: .remove, keepsOnePerGroup: true) { progress in
         DuplicateFinder.scan(progress: progress)
     }
+    let xcode = CleanupModel(
+        module: .xcode, removalMode: .delete, verb: .remove,
+        confirmation: "Build data, caches and simulators are deleted right away. Archives and Xcode copies go to the Trash."
+    ) { progress in
+        XcodeScanner.scan(progress: progress)
+    }
+
     let maintenance = MaintenanceModel()
     let loginItems = LoginItemsModel()
 
@@ -62,6 +69,7 @@ final class AppState {
         case .largeFiles: largeFiles.badge
         case .spaceLens: spaceLens.badge
         case .duplicates: duplicates.badge
+        case .xcode: xcode.badge
         case .shredder: shredder.items.isEmpty ? nil : ByteFormat.string(shredder.totalSize)
         case .maintenance: maintenance.badge
         case .loginItems: loginItems.badge
@@ -100,6 +108,7 @@ final class AppState {
         case .leftovers: leftovers
         case .extensions: extensions
         case .duplicates: duplicates
+        case .xcode: xcode
         default: nil
         }
     }

@@ -37,6 +37,9 @@ extension SidebarSection {
         case .files:
             ModuleTheme(deep: Color(hex: 0x240E02), mid: Color(hex: 0xA8400D), bright: Color(hex: 0xF2A23A),
                         accent: Color(hex: 0xFFB547), symbolGradient: [Color(hex: 0xFFE29A), Color(hex: 0xFF7A1A)])
+        case .developer:
+            ModuleTheme(deep: Color(hex: 0x03141F), mid: Color(hex: 0x0D5C73), bright: Color(hex: 0x38BDF8),
+                        accent: Color(hex: 0x22D3EE), symbolGradient: [Color(hex: 0xA5F3FC), Color(hex: 0x0EA5E9)])
         }
     }
 }
