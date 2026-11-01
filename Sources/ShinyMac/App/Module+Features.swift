@@ -43,6 +43,12 @@ extension Module {
                 Feature(symbol: "network", title: "Flush DNS", detail: "Fix sites that refuse to load."),
                 Feature(symbol: "magnifyingglass", title: "Reindex Spotlight", detail: "Get search results back on track."),
             ]
+        case .hiddenSettings:
+            [
+                Feature(symbol: "folder.fill", title: "Finder", detail: "Hidden files, path bar, full paths and no .DS_Store on shared drives."),
+                Feature(symbol: "dock.rectangle", title: "Dock", detail: "Instant auto-hide, dimmed hidden apps and fixed Spaces."),
+                Feature(symbol: "camera.viewfinder", title: "Screenshots", detail: "Format, shadows, file names and the floating thumbnail."),
+            ]
         case .loginItems:
             [
                 Feature(symbol: "power", title: "Launch agents", detail: "See everything that starts with your Mac."),

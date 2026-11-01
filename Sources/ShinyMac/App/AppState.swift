@@ -60,6 +60,7 @@ final class AppState {
 
     let maintenance = MaintenanceModel()
     let loginItems = LoginItemsModel()
+    let hiddenSettings = HiddenSettingsModel()
 
     @ObservationIgnored
     private(set) lazy var smartCare = SmartCareModel(
@@ -83,6 +84,7 @@ final class AppState {
         case .shredder: shredder.items.isEmpty ? nil : ByteFormat.string(shredder.totalSize)
         case .maintenance: maintenance.badge
         case .loginItems: loginItems.badge
+        case .hiddenSettings: hiddenSettings.badge
         case .updater: updater.badge
         case .uninstaller: uninstaller.phase == .ready ? "\(uninstaller.apps.count)" : nil
         default: nil

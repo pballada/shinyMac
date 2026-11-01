@@ -101,6 +101,8 @@ struct DetailView: View {
             MaintenanceView(model: state.maintenance)
         case .loginItems:
             LoginItemsView(model: state.loginItems)
+        case .hiddenSettings:
+            HiddenSettingsView(model: state.hiddenSettings)
         }
     }
 }

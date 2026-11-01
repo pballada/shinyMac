@@ -26,7 +26,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
     case smartCare
     case systemJunk, cloud, trash
     case privacy, appPermissions
-    case maintenance, loginItems
+    case maintenance, loginItems, hiddenSettings
     case uninstaller, updater, leftovers, extensions
     case largeFiles, duplicates, spaceLens, shredder
     case xcode
@@ -38,7 +38,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .smartCare: .home
         case .systemJunk, .cloud, .trash: .cleanup
         case .privacy, .appPermissions: .protection
-        case .maintenance, .loginItems: .performance
+        case .maintenance, .loginItems, .hiddenSettings: .performance
         case .uninstaller, .updater, .leftovers, .extensions: .applications
         case .largeFiles, .duplicates, .spaceLens, .shredder: .files
         case .xcode: .developer
@@ -55,6 +55,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .appPermissions: "App Permissions"
         case .maintenance: "Maintenance"
         case .loginItems: "Login Items"
+        case .hiddenSettings: "Hidden Settings"
         case .uninstaller: "Uninstaller"
         case .updater: "Updater"
         case .leftovers: "Leftovers"
@@ -77,6 +78,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .appPermissions: "lock.shield.fill"
         case .maintenance: "wrench.and.screwdriver.fill"
         case .loginItems: "power.circle.fill"
+        case .hiddenSettings: "slider.horizontal.3"
         case .uninstaller: "shippingbox.fill"
         case .updater: "arrow.down.app.fill"
         case .leftovers: "questionmark.folder.fill"
@@ -100,6 +102,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .appPermissions: "See which apps can use your camera, microphone, screen and files."
         case .maintenance: "Run tune-up tasks that keep macOS fast and healthy."
         case .loginItems: "Control what launches quietly in the background."
+        case .hiddenSettings: "Switch on macOS options that System Settings doesn't show."
         case .uninstaller: "Remove apps completely, along with every file they left behind."
         case .updater: "Find apps with new versions available."
         case .leftovers: "Find files left behind by apps you already deleted."
