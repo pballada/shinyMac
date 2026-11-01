@@ -21,7 +21,8 @@ struct GlassCard<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
-        content
+        // The stack keeps multi-view content inside the card instead of spilling into the parent's layout.
+        VStack(alignment: .leading, spacing: 0) { content }
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(.black.opacity(0.12), in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))

@@ -27,6 +27,12 @@ enum DebugSnapshot {
                 window.makeKeyAndOrderFront(nil)
             }
             try? await Task.sleep(for: .seconds(delay))
+            if let width = Double(env["SHINYMAC_WIDTH"] ?? ""), let window = NSApp.windows.first(where: \.isVisible) {
+                // Layout check: shrink the window, then report the width the content actually needs.
+                window.setContentSize(NSSize(width: width, height: window.frame.height))
+                try? await Task.sleep(for: .seconds(1))
+                print("SHINYMAC_WINDOW \(Int(window.frame.width))x\(Int(window.frame.height))")
+            }
             guard let view = NSApp.windows.first(where: \.isVisible)?.contentView?.superview,
                   let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
             view.cacheDisplay(in: view.bounds, to: rep)
