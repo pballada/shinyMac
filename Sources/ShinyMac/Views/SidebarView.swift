@@ -43,8 +43,12 @@ struct SidebarView: View {
             }
             .scrollIndicators(.never)
 
-            DiskUsageFooter()
-                .padding(14)
+            VStack(spacing: 8) {
+                UpdateBanner(model: SelfUpdateModel.shared)
+                DiskUsageFooter()
+            }
+            .padding(14)
+            .animation(.smooth, value: SelfUpdateModel.shared.phase)
         }
         .frame(width: 240)
         .onChange(of: state.selection) { _, selection in

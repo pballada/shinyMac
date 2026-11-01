@@ -19,6 +19,14 @@ struct ShinyMacApp: App {
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1120, height: 740)
         .windowBackgroundDragBehavior(.enabled)
+        .commands {
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates…") {
+                    Task { await SelfUpdateModel.shared.check() }
+                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                }
+            }
+        }
 
         Settings {
             SettingsView()
@@ -37,6 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.regular)
         NSApp.activate()
         SpaceAlertMonitor.start()
+        SelfUpdateModel.shared.startAutomaticChecks()
     }
 
     /// Apps dragged onto the Dock icon.

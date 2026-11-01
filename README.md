@@ -34,6 +34,7 @@ Everything you need to keep a Mac clean and fast, in one native SwiftUI app with
 | 🔐 | **App Permissions** | Which apps can use the camera, microphone, screen recording, Accessibility, Input Monitoring, Full Disk Access and more, including permissions left by deleted apps |
 | 🔧 | **Maintenance** | Free up RAM, flush DNS, reindex Spotlight, rebuild Launch Services, reset Quick Look and font caches, thin Time Machine snapshots, speed up Mail, clean up Homebrew, all behind a single password prompt |
 | ⏻ | **Login Items** | Every launch agent and daemon, which app owns it, whether it's running, and **broken** items left by deleted apps |
+| 🎛️ | **Hidden Settings** | macOS options with no switch in System Settings: hidden files, path bar and no `.DS_Store` on shared drives in Finder; instant Dock auto-hide; screenshot format, shadow and thumbnail; expanded save dialogs and key repeat. One click restores the defaults |
 | 📦 | **Uninstaller** | Apps plus every file they scatter across 22 Library locations; *Reset* wipes an app's data but keeps the app. Filters for unused, large and Intel-only apps. Drop an app on the window or Dock icon to start |
 | ⬇️ | **Updater** | Checks Sparkle feeds and the App Store for newer versions |
 | ❓ | **Leftovers** | Support files from apps you already deleted, matched conservatively |
@@ -72,6 +73,8 @@ brew install --cask shinymac
 ### Download
 
 Download the latest `ShinyMac-x.y.z.zip` from [Releases](https://github.com/pballada/shinyMac/releases). Releases are a universal binary for Apple silicon and Intel, signed with a Developer ID and notarized by Apple, so they open with a double-click.
+
+ShinyMac updates itself from GitHub releases (**ShinyMac › Check for Updates…**, or automatically in Settings). Before installing, it verifies that the download is signed with the same Developer ID.
 
 Every commit on `main` is also built by CI ([latest run](https://github.com/pballada/shinyMac/actions/workflows/ci.yml)). Those builds are ad-hoc signed: the first time, right-click the app and choose **Open**.
 

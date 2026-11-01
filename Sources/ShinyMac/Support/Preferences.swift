@@ -12,6 +12,9 @@ enum Preferences {
         static let lastSmartCareScan = "lastSmartCareScan"
         static let lastCareReminder = "lastCareReminder"
         static let firstLaunch = "firstLaunch"
+        static let autoCheckUpdates = "autoCheckUpdates"
+        static let autoInstallUpdates = "autoInstallUpdates"
+        static let lastUpdateCheck = "lastUpdateCheck"
     }
 
     /// Move everything to the Trash, even regenerable junk that is normally deleted outright.

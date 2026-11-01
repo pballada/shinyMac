@@ -7,7 +7,10 @@ struct SettingsView: View {
     @AppStorage(Preferences.Key.showMenuBarMonitor) private var showMenuBarMonitor = true
     @AppStorage(Preferences.Key.spaceAlerts) private var spaceAlerts = true
     @AppStorage(Preferences.Key.careSchedule) private var careSchedule = CareSchedule.weekly.rawValue
+    @AppStorage(Preferences.Key.autoCheckUpdates) private var autoCheckUpdates = true
+    @AppStorage(Preferences.Key.autoInstallUpdates) private var autoInstallUpdates = false
     @State private var hasFullDiskAccess = Permissions.hasFullDiskAccess
+    private let updates = SelfUpdateModel.shared
 
     var body: some View {
         Form {
@@ -51,8 +54,31 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Updates") {
+                Toggle("Check for updates automatically", isOn: $autoCheckUpdates)
+                Toggle(isOn: $autoInstallUpdates) {
+                    Text("Download and install updates")
+                    Text("Only releases signed by the ShinyMac developer are installed. They take effect the next time ShinyMac opens.")
+                }
+                .disabled(!autoCheckUpdates)
+                LabeledContent {
+                    switch updates.phase {
+                    case .available:
+                        Button("Install") { Task { await updates.install() } }
+                    case .readyToRelaunch:
+                        Button("Relaunch") { updates.relaunch() }
+                    case .checking, .installing:
+                        ProgressView().controlSize(.small)
+                    default:
+                        Button("Check Now") { Task { await updates.check() } }
+                    }
+                } label: {
+                    Text(Self.version)
+                    Text(updates.status)
+                }
+            }
+
             Section {
-                LabeledContent("Version", value: Self.version)
                 Link("Source code on GitHub", destination: URL(string: "https://github.com/pballada/shinyMac")!)
             }
         }
