@@ -39,7 +39,7 @@ struct RootView: View {
         .ignoresSafeArea()
         .foregroundStyle(.white)
         .preferredColorScheme(.dark)
-        .animation(.smooth(duration: 0.4), value: state.selection)
+        .animation(.smooth(duration: 0.25), value: state.selection)
     }
 }
 

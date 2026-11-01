@@ -4,6 +4,8 @@ import SwiftUI
 struct SidebarView: View {
     @Environment(AppState.self) private var state
     @Namespace private var selectionNamespace
+    /// Drawn ahead of `state.selection` so the highlight moves on the click, before the new screen is built.
+    @State private var highlighted: Module?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -28,10 +30,10 @@ struct SidebarView: View {
                             SidebarRow(
                                 module: module,
                                 badge: state.badge(for: module),
-                                isSelected: state.selection == module,
+                                isSelected: (highlighted ?? state.selection) == module,
                                 namespace: selectionNamespace
                             ) {
-                                withAnimation(.spring(duration: 0.35)) { state.selection = module }
+                                select(module)
                             }
                         }
                     }
@@ -45,9 +47,20 @@ struct SidebarView: View {
                 .padding(14)
         }
         .frame(width: 240)
+        .onChange(of: state.selection) { _, selection in
+            // Keep a newer click's highlight if the user clicked twice quickly.
+            if highlighted == selection { highlighted = nil }
+        }
         .background(.black.opacity(0.16), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shinyGlass(in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .padding(8)
+    }
+
+    private func select(_ module: Module) {
+        guard module != (highlighted ?? state.selection) else { return }
+        withAnimation(.snappy(duration: 0.16)) { highlighted = module }
+        // Let the highlight render this frame; the detail screen follows on the next run loop turn.
+        Task { @MainActor in state.selection = module }
     }
 
     private var brand: some View {
