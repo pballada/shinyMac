@@ -28,7 +28,7 @@ Everything you need to keep a Mac clean and fast, in one native SwiftUI app with
 |---|---|---|
 | ✨ | **Smart Care** | One scan across every module, a dashboard of what it found, and a one-click tune-up |
 | 🫧 | **System Junk** | User caches, logs, Xcode DerivedData and simulators, Homebrew/npm/pip/Yarn/CocoaPods/SwiftPM/Gradle/Cargo caches, Mail downloads, Photos analysis caches, old iPhoto/Aperture libraries, broken preferences, iOS firmware and old device backups, stale downloads |
-| ☁️ | **Cloud Cleanup** | Frees space taken by downloaded iCloud Drive, Dropbox, Google Drive, OneDrive and Box files. The files stay in the cloud |
+| ☁️ | **Cloud Cleanup** | Frees space taken by downloaded iCloud Drive and iCloud app documents, plus Dropbox, Google Drive, OneDrive, Box, pCloud, Proton Drive, Synology Drive and other File Provider apps. The files stay in the cloud |
 | 🗑️ | **Trash Bins** | Every Trash, including external drives, with a Finder fallback when access is restricted |
 | ✋ | **Privacy** | History and cookies for Safari, Chrome, Edge, Brave, Arc, Vivaldi, Opera and Firefox, plus Recent Items. Never touches passwords or bookmarks |
 | 🔐 | **App Permissions** | Which apps can use the camera, microphone, screen recording, Accessibility, Input Monitoring, Full Disk Access and more, including permissions left by deleted apps |

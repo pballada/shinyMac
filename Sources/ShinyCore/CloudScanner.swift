@@ -9,14 +9,30 @@ public enum CloudScanner {
         let title: String
         let symbol: String
         let root: URL
+        var detail = "Local copies of cloud files; they download again when opened"
+        /// Folders under `root` that aren't items, e.g. iCloud Drive inside Mobile Documents.
+        var skipped: Set<String> = []
+        /// Display name for an item folder.
+        var itemName: (String) -> String = { $0 }
     }
+
+    static let iCloudDrive = "com~apple~CloudDocs"
 
     static func providers(home: URL) -> [Provider] {
         let library = home.appending(path: "Library", directoryHint: .isDirectory)
-        var providers = [Provider(
-            id: "icloud", title: "iCloud Drive", symbol: "icloud.fill",
-            root: library.appending(path: "Mobile Documents/com~apple~CloudDocs", directoryHint: .isDirectory)
-        )]
+        let mobileDocuments = library.appending(path: "Mobile Documents", directoryHint: .isDirectory)
+        var providers = [
+            Provider(
+                id: "icloud", title: "iCloud Drive", symbol: "icloud.fill",
+                root: mobileDocuments.appending(path: iCloudDrive, directoryHint: .isDirectory)
+            ),
+            // Each app that syncs documents through iCloud (Pages, Numbers, Keynote, many others) has its own container.
+            Provider(
+                id: "icloud-apps", title: "iCloud App Documents", symbol: "icloud.and.arrow.down.fill",
+                root: mobileDocuments, detail: "Documents apps keep in iCloud; they download again when opened",
+                skipped: [iCloudDrive], itemName: containerName
+            ),
+        ]
         // ~/Library/CloudStorage/<App>-<account>, e.g. "GoogleDrive-me@example.com" or "OneDrive-Personal".
         for folder in FileSizer.children(of: library.appending(path: "CloudStorage", directoryHint: .isDirectory)) {
             let name = folder.lastPathComponent
@@ -33,9 +49,18 @@ public enum CloudScanner {
     /// "GoogleDrive-me@example.com" → ("Google Drive", "me@example.com"); "Dropbox" → ("Dropbox", nil).
     static func splitProviderFolder(_ name: String) -> (app: String, account: String?) {
         let parts = name.split(separator: "-", maxSplits: 1).map(String.init)
-        let known = ["GoogleDrive": "Google Drive", "OneDrive": "OneDrive", "Box": "Box", "Dropbox": "Dropbox", "pCloudDrive": "pCloud"]
+        let known = [
+            "GoogleDrive": "Google Drive", "OneDrive": "OneDrive", "Box": "Box", "Dropbox": "Dropbox", "pCloudDrive": "pCloud",
+            "ProtonDrive": "Proton Drive", "SynologyDrive": "Synology Drive", "Nextcloud": "Nextcloud", "ownCloud": "ownCloud",
+            "Egnyte": "Egnyte", "SharePoint": "SharePoint", "MEGA": "MEGA", "Tresorit": "Tresorit", "Seafile": "Seafile",
+        ]
         let app = known[parts[0]] ?? parts[0]
         return (app, parts.count > 1 ? parts[1] : nil)
+    }
+
+    /// "com~apple~Pages" → "Pages", "iCloud~md~obsidian" → "obsidian" (the app's own name is the last part).
+    static func containerName(_ folder: String) -> String {
+        folder.split(separator: "~").last.map(String.init) ?? folder
     }
 
     public static func scan(home: URL = Paths.home, progress: ScanProgress) -> [CleanupGroup] {
@@ -46,7 +71,7 @@ public enum CloudScanner {
             progress.update(detail: provider.title, fraction: Double(index) / Double(providers.count))
             // Only allocated bytes count: files that live only in the cloud take no space here.
             let items = FileSizer.children(of: provider.root)
-                .filter { !$0.lastPathComponent.hasPrefix(".") }
+                .filter { !$0.lastPathComponent.hasPrefix(".") && !provider.skipped.contains($0.lastPathComponent) }
                 .compactMap { url -> CleanupItem? in
                     if Task.isCancelled { return nil }
                     progress.update(detail: "\(provider.title) › \(url.lastPathComponent)")
@@ -54,13 +79,13 @@ public enum CloudScanner {
                     guard item.size >= minimumSize else { return nil }
                     progress.found(bytes: item.size)
                     return CleanupItem(
-                        url: url, size: item.size, modified: item.modified,
+                        url: url, name: provider.itemName(url.lastPathComponent), size: item.size, modified: item.modified,
                         note: "Downloaded to this Mac · stays in \(provider.title)", removal: .evictDownload
                     )
                 }
             guard !items.isEmpty else { continue }
             groups.append(CleanupGroup(
-                id: provider.id, title: provider.title, detail: "Local copies of cloud files; they download again when opened",
+                id: provider.id, title: provider.title, detail: provider.detail,
                 symbol: provider.symbol, items: items.sorted { $0.size > $1.size }
             ))
         }
