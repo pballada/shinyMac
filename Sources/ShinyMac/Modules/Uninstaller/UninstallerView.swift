@@ -36,8 +36,9 @@ private struct UninstallerBrowser: View {
             }
 
             HStack(spacing: 14) {
-                AppListPane(model: model).frame(width: 330)
-                AppDetailPane(model: model)
+                AppListPane(model: model).frame(minWidth: 250, idealWidth: 320, maxWidth: 320)
+                // The detail pane gets its room first; the list shrinks on narrow windows.
+                AppDetailPane(model: model).layoutPriority(1)
             }
         }
         .padding(.horizontal, 24)
@@ -229,12 +230,14 @@ private struct AppDetailPane: View {
         HStack(spacing: 16) {
             FileIconView(url: app.url, size: 64)
             VStack(alignment: .leading, spacing: 4) {
-                Text(app.name).font(.display(22))
+                Text(app.name).font(.display(22)).lineLimit(2)
                 Text(app.bundleID)
                     .font(.system(size: 11.5, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.5))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
                     .textSelection(.enabled)
-                HStack(spacing: 6) {
+                FlowLayout(spacing: 6) {
                     StatPill(symbol: "internaldrive", text: ByteFormat.string(model.filesSize))
                     if let version = app.version { StatPill(symbol: "tag", text: version) }
                     if let lastUsed = app.lastUsed {
@@ -289,16 +292,19 @@ private struct AppDetailPane: View {
     private func footer(for app: InstalledApp) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 1) {
-                Text("\(model.selectedFiles.count) of \(model.files.count) items selected")
+                Text("\(model.selectedFiles.count) of \(model.files.count) items")
+                    .lineLimit(1)
                     .font(.system(size: 12))
                     .foregroundStyle(.white.opacity(0.6))
                 Text(ByteFormat.string(model.selectedFilesSize))
                     .font(.display(18, weight: .semibold))
                     .monospacedDigit()
+                    .fixedSize()
             }
-            Spacer()
-            Button("Reset App", systemImage: "arrow.counterclockwise") { confirmReset = true }
+            Spacer(minLength: 0)
+            Button("Reset", systemImage: "arrow.counterclockwise") { confirmReset = true }
                 .buttonStyle(.glassPill)
+                .fixedSize()
                 .disabled(model.isRemoving || !model.selectedFiles.contains { $0.kind != .application })
                 .help("Remove the app's data and settings but keep the app")
             Button {
@@ -307,6 +313,7 @@ private struct AppDetailPane: View {
                 Label(model.isRemoving ? "Removing…" : "Uninstall", systemImage: "trash")
             }
             .buttonStyle(.glassPill(prominent: true, tint: theme.accent))
+            .fixedSize()
             .disabled(model.isRemoving || model.selectedFiles.isEmpty)
         }
         .confirmationDialog("Uninstall \(app.name)?", isPresented: $confirmUninstall, titleVisibility: .visible) {
@@ -399,6 +406,8 @@ struct StatPill: View {
 
     var body: some View {
         Label(text, systemImage: symbol)
+            .lineLimit(1)
+            .fixedSize()
             .font(.system(size: 11, weight: .medium))
             .foregroundStyle(.white.opacity(0.75))
             .padding(.horizontal, 8)

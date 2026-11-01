@@ -83,6 +83,47 @@ struct BigSize: View {
     }
 }
 
+/// Lays children out left to right, wrapping onto new lines when the width runs out.
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 6
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = rows(for: subviews, width: proposal.width ?? .infinity)
+        let width = rows.map { $0.reduce(0) { $0 + $1.width } + spacing * CGFloat($0.count - 1) }.max() ?? 0
+        let height = rows.map { $0.map(\.height).max() ?? 0 }.reduce(0, +) + spacing * CGFloat(max(rows.count - 1, 0))
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var index = 0
+        var y = bounds.minY
+        for row in rows(for: subviews, width: bounds.width) {
+            var x = bounds.minX
+            for size in row {
+                subviews[index].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+                x += size.width + spacing
+                index += 1
+            }
+            y += (row.map(\.height).max() ?? 0) + spacing
+        }
+    }
+
+    private func rows(for subviews: Subviews, width: CGFloat) -> [[CGSize]] {
+        var rows: [[CGSize]] = [[]]
+        var x: CGFloat = 0
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if x > 0 && x + size.width > width {
+                rows.append([])
+                x = 0
+            }
+            rows[rows.count - 1].append(size)
+            x += size.width + spacing
+        }
+        return rows
+    }
+}
+
 /// The start screen every module shares: title, pitch, features, illustration and the orb action.
 struct ModuleStartView: View {
     let module: Module
