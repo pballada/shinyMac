@@ -64,7 +64,9 @@ Everything you need to keep a Mac clean and fast, in one native SwiftUI app with
 ### Homebrew
 
 ```sh
-brew install --cask pballada/tap/shinymac
+brew tap pballada/tap
+brew trust pballada/tap   # newer Homebrew asks you to trust third-party taps once
+brew install --cask shinymac
 ```
 
 ### Download
