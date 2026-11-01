@@ -14,10 +14,19 @@
   <img src="https://img.shields.io/badge/macOS-15%2B-black?logo=apple" alt="macOS 15+">
   <img src="https://img.shields.io/badge/Swift-6.2-F05138?logo=swift&logoColor=white" alt="Swift 6.2">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License"></a>
+  <a href="https://github.com/pballada/shinyMac/releases/latest"><img src="https://img.shields.io/github/v/release/pballada/shinyMac?color=C77DFF" alt="Latest release"></a>
+  <a href="https://github.com/pballada/shinyMac/releases"><img src="https://img.shields.io/github/downloads/pballada/shinyMac/total?color=FF7AD9" alt="Downloads"></a>
+  <a href="https://github.com/pballada/shinyMac/stargazers"><img src="https://img.shields.io/github/stars/pballada/shinyMac?style=social" alt="GitHub stars"></a>
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/smart-care-scan.jpg" alt="Smart Care scanning" width="820">
+  <b><a href="https://github.com/pballada/shinyMac/releases/latest">Download</a></b> ·
+  <code>brew install --cask pballada/tap/shinymac</code> ·
+  Free and open source · no account · no telemetry
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/smart-care.jpg" alt="Smart Care results" width="820">
 </p>
 
 ## Features
@@ -48,8 +57,14 @@ Everything you need to keep a Mac clean and fast, in one native SwiftUI app with
 | 🔔 | **Notifications** | A gentle note when free space runs low or the Trash gets big, plus weekly Smart Care reminders |
 
 <p align="center">
+  <img src="docs/screenshots/uninstaller.jpg" alt="Uninstaller" width="49%">
+  <img src="docs/screenshots/hidden-settings.jpg" alt="Hidden Settings" width="49%">
   <img src="docs/screenshots/system-junk.jpg" alt="System Junk" width="49%">
-  <img src="docs/screenshots/welcome.jpg" alt="Welcome screen" width="49%">
+  <img src="docs/screenshots/smart-care-scan.jpg" alt="Smart Care scanning" width="49%">
+</p>
+
+<p align="center">
+  If ShinyMac freed up some space for you, a ⭐ helps other Mac users find it.
 </p>
 
 ## Safety first
