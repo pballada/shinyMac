@@ -69,9 +69,9 @@ brew install --cask pballada/tap/shinymac
 
 ### Download
 
-Every commit on `main` is built by CI. Grab `ShinyMac.zip` from the latest [CI run](https://github.com/pballada/shinyMac/actions/workflows/ci.yml) or from [Releases](https://github.com/pballada/shinyMac/releases).
+Download the latest `ShinyMac-x.y.z.zip` from [Releases](https://github.com/pballada/shinyMac/releases). Releases are a universal binary for Apple silicon and Intel, signed with a Developer ID and notarized by Apple, so they open with a double-click.
 
-The app is ad-hoc signed, not notarized. The first time, right-click it and choose **Open**.
+Every commit on `main` is also built by CI ([latest run](https://github.com/pballada/shinyMac/actions/workflows/ci.yml)). Those builds are ad-hoc signed: the first time, right-click the app and choose **Open**.
 
 ### Build from source
 
