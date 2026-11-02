@@ -29,7 +29,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
     case maintenance, loginItems, hiddenSettings
     case uninstaller, updater, leftovers, extensions
     case largeFiles, duplicates, spaceLens, shredder
-    case xcode
+    case xcode, devTools
 
     var id: Self { self }
 
@@ -41,7 +41,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .maintenance, .loginItems, .hiddenSettings: .performance
         case .uninstaller, .updater, .leftovers, .extensions: .applications
         case .largeFiles, .duplicates, .spaceLens, .shredder: .files
-        case .xcode: .developer
+        case .xcode, .devTools: .developer
         }
     }
 
@@ -65,6 +65,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .spaceLens: "Space Lens"
         case .shredder: "Shredder"
         case .xcode: "Xcode"
+        case .devTools: "Dev Tools"
         }
     }
 
@@ -88,15 +89,16 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .spaceLens: "chart.pie.fill"
         case .shredder: "flame.fill"
         case .xcode: "hammer.fill"
+        case .devTools: "terminal.fill"
         }
     }
 
     /// One line pitch shown under the title on the module's start screen.
     var tagline: String {
         switch self {
-        case .smartCare: "One scan to clean, speed up and tidy your Mac."
+        case .smartCare: "One scan, one click: free up space and speed up your Mac."
         case .systemJunk: "Clear caches, logs and developer clutter that pile up over time."
-        case .cloud: "Free up space taken by downloaded cloud files, without deleting them."
+        case .cloud: "Find big and forgotten cloud files taking space on this Mac, and offload just those."
         case .trash: "Empty every Trash on your Mac, all at once."
         case .privacy: "Wipe browsing history, cookies and recent items."
         case .appPermissions: "See which apps can use your camera, microphone, screen and files."
@@ -112,6 +114,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .spaceLens: "See what takes up space, at a glance."
         case .shredder: "Delete files right away, skipping the Trash."
         case .xcode: "Reclaim the gigabytes Xcode, simulators and builds pile up."
+        case .devTools: "See what Docker, package managers, toolchains and projects keep on disk."
         }
     }
 }

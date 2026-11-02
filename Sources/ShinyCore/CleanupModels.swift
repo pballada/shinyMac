@@ -39,6 +39,8 @@ public enum Removal: Hashable, Sendable {
     case simulatorRuntime(identifier: String)
     /// A cloud file's local copy: the download is removed and the file stays in the cloud.
     case evictDownload
+    /// Removed by the tool that owns it, e.g. `docker builder prune`, so its own bookkeeping stays right.
+    case command(executable: String, arguments: [String])
 }
 
 /// A themed bucket of cleanup items, e.g. "User Caches".

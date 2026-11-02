@@ -1,3 +1,4 @@
+import AppKit
 import ShinyCore
 import SwiftUI
 
@@ -69,16 +70,29 @@ struct SidebarView: View {
 
     private var brand: some View {
         HStack(spacing: 10) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(SidebarSection.home.theme.iconGradient)
-                Image(systemName: "sparkles")
-                    .font(.system(size: 14, weight: .bold))
+            if let icon = Self.appIcon {
+                // The real app icon has its own margins; draw it a little larger so it lines up with the title.
+                Image(nsImage: icon)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: 34, height: 34)
+                    .padding(-3)
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(SidebarSection.home.theme.iconGradient)
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 14, weight: .bold))
+                }
+                .frame(width: 28, height: 28)
             }
-            .frame(width: 28, height: 28)
             Text("ShinyMac").font(.display(18))
         }
     }
+
+    /// The bundle's AppIcon.icns. Missing when running unbundled (`swift run`), where the gradient tile stands in.
+    private static let appIcon: NSImage? = Bundle.main.url(forResource: "AppIcon", withExtension: "icns")
+        .flatMap(NSImage.init(contentsOf:))
 }
 
 private struct SidebarRow: View {

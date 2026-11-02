@@ -44,7 +44,12 @@ public enum Cleaner {
             }
 
             if let tool = toolCommand(for: item.removal) {
-                runTool(tool, for: item, into: &report)
+                runTool("/usr/bin/xcrun", tool, for: item, into: &report)
+                continue
+            }
+
+            if case .command(let executable, let arguments) = item.removal {
+                runTool(executable, arguments, for: item, into: &report)
                 continue
             }
 
@@ -107,20 +112,20 @@ public enum Cleaner {
     /// Items that a developer tool removes rather than the file system.
     static func toolCommand(for removal: Removal) -> [String]? {
         switch removal {
-        case .file, .moveToTrash, .evictDownload: nil
+        case .file, .moveToTrash, .evictDownload, .command: nil
         case .simulator(let udid): ["simctl", "delete", udid]
         case .simulatorRuntime(let identifier): ["simctl", "runtime", "delete", identifier]
         }
     }
 
-    private static func runTool(_ arguments: [String], for item: CleanupItem, into report: inout Report) {
+    private static func runTool(_ executable: String, _ arguments: [String], for item: CleanupItem, into report: inout Report) {
         do {
-            let result = try Shell.run("/usr/bin/xcrun", arguments)
+            let result = try Shell.run(executable, arguments)
             if result.succeeded {
                 report.removedBytes += item.size
                 report.removed.append(item.url)
             } else {
-                let reason = result.output.split(whereSeparator: \.isNewline).last.map(String.init) ?? "xcrun failed"
+                let reason = result.output.split(whereSeparator: \.isNewline).last.map(String.init) ?? "\(URL(filePath: executable).lastPathComponent) failed"
                 report.failures.append(Failure(url: item.url, reason: reason, needsAdmin: false))
             }
         } catch {

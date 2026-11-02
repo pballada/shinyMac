@@ -6,9 +6,9 @@ extension Module {
         switch self {
         case .smartCare:
             [
-                Feature(symbol: "bubbles.and.sparkles", title: "Cleanup", detail: "Caches, logs and Trash you don't need."),
-                Feature(symbol: "bolt.fill", title: "Speed", detail: "Tune-up tasks that keep macOS snappy."),
-                Feature(symbol: "square.stack.3d.up.fill", title: "Clutter", detail: "Large files and leftovers worth a look."),
+                Feature(symbol: "bubbles.and.sparkles", title: "Free up space", detail: "System junk and the Trash, cleared in one go."),
+                Feature(symbol: "bolt.fill", title: "Speed up", detail: "Tune-up tasks that keep macOS snappy, run right after."),
+                Feature(symbol: "eye.fill", title: "Worth a look", detail: "Updates, leftovers and large files, for you to decide."),
             ]
         case .systemJunk:
             [
@@ -19,6 +19,7 @@ extension Module {
         case .cloud:
             [
                 Feature(symbol: "icloud.fill", title: "Every cloud", detail: "iCloud Drive, Dropbox, Google Drive, OneDrive and Box."),
+                Feature(symbol: "clock.badge.questionmark", title: "Big and forgotten", detail: "Large downloads and files you haven't opened in 6 months. Only the forgotten ones start checked."),
                 Feature(symbol: "arrow.down.to.line.compact", title: "Downloads only", detail: "Files stay in the cloud and download again when you open them."),
             ]
         case .trash:
@@ -95,6 +96,12 @@ extension Module {
                 Feature(symbol: "square.stack.3d.down.right.fill", title: "Simulator runtimes", detail: "Old iOS and visionOS images, several GB each."),
                 Feature(symbol: "ipad.and.iphone", title: "Simulators", detail: "Devices left behind by runtimes you removed."),
                 Feature(symbol: "hammer.fill", title: "Builds & archives", detail: "DerivedData per project, device support and old archives."),
+            ]
+        case .devTools:
+            [
+                Feature(symbol: "shippingbox.fill", title: "Docker & VMs", detail: "Build cache, unused images and volumes, plus Colima, OrbStack and emulator disks."),
+                Feature(symbol: "cube.box.fill", title: "Caches & toolchains", detail: "npm, pnpm, pip, Gradle, Cargo, Go; old Node, Python and Rust versions."),
+                Feature(symbol: "folder.fill.badge.gearshape", title: "Project folders", detail: "node_modules, virtual envs and build folders in projects you haven't touched."),
             ]
         case .spaceLens:
             [
