@@ -1,3 +1,4 @@
+import AppKit
 import ShinyCore
 import SwiftUI
 
@@ -11,10 +12,10 @@ struct SmartCareView: View {
                 ModuleStartView(module: .smartCare, features: Module.smartCare.features) { model.scan() }
             case .scanning:
                 SmartCareScanning(model: model)
-            case .results:
-                SmartCareResults(model: model)
+            case .ready:
+                SmartCareReady(model: model)
             case .running:
-                ModuleBusyView(module: .smartCare, title: "Running Smart Care…", detail: model.runStep)
+                SmartCareRunning(model: model)
             case .done:
                 SmartCareDone(model: model)
             }
@@ -23,13 +24,17 @@ struct SmartCareView: View {
     }
 }
 
+private var theme: ModuleTheme { Module.smartCare.theme }
+
+// MARK: Scanning
+
 private struct SmartCareScanning: View {
     let model: SmartCareModel
 
     var body: some View {
         VStack(spacing: 26) {
             Spacer()
-            HeroIllustration(symbol: Module.smartCare.symbol, theme: Module.smartCare.theme, size: 290, isBusy: true,
+            HeroIllustration(symbol: Module.smartCare.symbol, theme: theme, size: 290, isBusy: true,
                              progress: Double(model.finished.count) / Double(SmartCareModel.Area.allCases.count))
             Text("Looking after your Mac…").font(.display(26, weight: .semibold))
             HStack(spacing: 10) {
@@ -57,12 +62,11 @@ private struct SmartCareScanning: View {
     }
 }
 
-private struct SmartCareResults: View {
-    let model: SmartCareModel
-    @Environment(AppState.self) private var state
-    @State private var isConfirming = false
+// MARK: Ready
 
-    private var theme: ModuleTheme { Module.smartCare.theme }
+private struct SmartCareReady: View {
+    let model: SmartCareModel
+    @State private var isConfirming = false
 
     var body: some View {
         VStack(spacing: 18) {
@@ -73,120 +77,211 @@ private struct SmartCareResults: View {
             }
             .padding(.top, 6)
 
-            VStack(spacing: 6) {
-                Text("Your Mac is ready for a tune-up")
+            VStack(spacing: 4) {
+                Text("Ready to free up space and speed things up")
                     .font(.system(size: 12.5, weight: .bold))
                     .tracking(1.2)
                     .textCase(.uppercase)
                     .foregroundStyle(theme.iconGradient)
-                BigSize(bytes: model.included.contains(.cleanup) ? model.cleanableBytes : 0, size: 58)
-                Text("ready to clean")
+                BigSize(bytes: model.freeableBytes, size: 58)
+                Text(subtitle)
                     .font(.system(size: 15))
                     .foregroundStyle(.white.opacity(0.7))
             }
 
-            Grid(horizontalSpacing: 14, verticalSpacing: 14) {
-                GridRow {
-                    AreaTile(model: model, area: .cleanup) { state.selection = .systemJunk }
-                    AreaTile(model: model, area: .speed) { state.selection = .maintenance }
-                }
-                GridRow {
-                    AreaTile(model: model, area: .applications) {
-                        state.selection = model.updater.updates.isEmpty ? .leftovers : .updater
-                    }
-                    AreaTile(model: model, area: .clutter) { state.selection = .largeFiles }
+            VStack(spacing: 0) {
+                SectionLabel(text: "Essentials · run one after the other")
+                ForEach(SmartCareModel.Essential.allCases) { essential in
+                    EssentialRow(model: model, essential: essential)
                 }
             }
-            .frame(maxWidth: 760)
+            .padding(.bottom, 6)
+            .frame(maxWidth: 680)
+            .shinyGlass(in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+
+            WorthALook(model: model)
+                .frame(maxWidth: 680)
 
             Spacer(minLength: 0)
-            OrbButton(title: "Run", theme: theme, isEnabled: !model.included.isEmpty) { isConfirming = true }
-                .padding(.bottom, 26)
+            OrbButton(title: "Run", theme: theme, isEnabled: !model.plannedEssentials.isEmpty) {
+                if model.plannedEssentials.contains(.trash) { isConfirming = true } else { model.run() }
+            }
+            .padding(.bottom, 24)
         }
         .padding(.horizontal, 28)
         .confirmationDialog("Run Smart Care?", isPresented: $isConfirming, titleVisibility: .visible) {
             Button("Run") { model.run() }
         } message: {
-            Text(confirmationText)
+            Text("Emptying the Trash deletes \(ByteFormat.string(model.trash.selectedSize)) permanently. This can't be undone.")
         }
     }
 
-    private var confirmationText: String {
-        var parts: [String] = []
-        if model.included.contains(.cleanup) {
-            parts.append("Removes \(ByteFormat.string(model.junk.selectedSize)) of junk and permanently empties \(ByteFormat.string(model.trash.selectedSize)) from the Trash.")
-        }
-        if model.included.contains(.speed) {
-            let needsPassword = model.maintenance.selectedTasks.contains(where: \.needsAdmin)
-            parts.append("Runs \(model.maintenance.selectedTasks.count) maintenance tasks\(needsPassword ? " (asks for your password)" : "").")
-        }
-        return parts.joined(separator: " ")
+    private var subtitle: String {
+        let tasks = model.enabled.contains(.speed) ? model.maintenance.selectedTasks.count : 0
+        let space = "can be freed"
+        return tasks > 0 ? "\(space) · \(tasks) speed-up task\(tasks == 1 ? "" : "s")" : space
     }
 }
 
-private struct AreaTile: View {
+private struct EssentialRow: View {
     let model: SmartCareModel
-    let area: SmartCareModel.Area
-    let review: () -> Void
+    let essential: SmartCareModel.Essential
+    @Environment(AppState.self) private var state
     @State private var isHovering = false
 
     var body: some View {
-        let theme = area.module.theme
-        HStack(alignment: .top, spacing: 14) {
-            Image(systemName: area.symbol)
-                .font(.system(size: 20, weight: .semibold))
-                .frame(width: 48, height: 48)
-                .background(theme.iconGradient, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .shadow(color: theme.accent.opacity(0.5), radius: 10, y: 4)
+        let isOn = model.enabled.contains(essential)
+        let hasWork = model.hasWork(essential)
+        HStack(spacing: 14) {
+            CheckCircle(state: isOn && hasWork ? .on : .off, tint: theme.accent, size: 18)
+            EssentialIcon(essential: essential, size: 34)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(essential.title).font(.system(size: 14, weight: .semibold))
+                Text(model.detail(for: essential))
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 8)
+            Text(model.headline(for: essential))
+                .font(.display(17))
+                .monospacedDigit()
+                .opacity(isOn ? 1 : 0.45)
+            Button { state.selection = essential.module } label: {
+                Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.white.opacity(0.5))
+            .help("Review in \(essential.module.title)")
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 10)
+        .background(.white.opacity(isHovering ? 0.05 : 0))
+        .contentShape(Rectangle())
+        .onTapGesture { model.toggle(essential) }
+        .onHover { isHovering = $0 }
+        .opacity(hasWork ? 1 : 0.55)
+        .animation(.easeOut(duration: 0.12), value: isHovering)
+    }
+}
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(area.rawValue.uppercased())
-                        .font(.system(size: 10.5, weight: .bold))
-                        .tracking(0.8)
-                        .foregroundStyle(.white.opacity(0.55))
-                    Spacer()
-                    if area.isActionable {
-                        Button { model.toggle(area) } label: {
-                            CheckCircle(state: model.included.contains(area) ? .on : .off, tint: theme.accent, size: 18)
-                        }
-                        .buttonStyle(.plain)
-                        .help("Include in Run")
-                    }
-                }
-                Text(model.headline(for: area))
-                    .font(.display(22))
-                    .monospacedDigit()
-                Text(model.detail(for: area))
-                    .font(.system(size: 12))
-                    .foregroundStyle(.white.opacity(0.6))
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-                Button("Review", systemImage: "chevron.right", action: review)
-                    .labelStyle(TrailingIconLabelStyle())
-                    .buttonStyle(.plain)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(theme.iconGradient)
-                    .padding(.top, 2)
+/// Things that need a person's judgement: shown, never run automatically.
+private struct WorthALook: View {
+    let model: SmartCareModel
+    @Environment(AppState.self) private var state
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("WORTH A LOOK")
+                .font(.system(size: 10, weight: .bold))
+                .tracking(0.8)
+                .foregroundStyle(.white.opacity(0.45))
+                .padding(.leading, 4)
+            HStack(spacing: 12) {
+                tile(.updater, value: model.updater.updates.isEmpty ? "Up to date" : "\(model.updater.updates.count) updates",
+                     detail: "Newer versions out")
+                tile(.leftovers, value: model.leftovers.totalSize > 0 ? ByteFormat.string(model.leftovers.totalSize) : "None",
+                     detail: "Left by deleted apps")
+                tile(.largeFiles, value: "\(model.largeFiles.files.count) files",
+                     detail: "\(ByteFormat.string(model.largeFileBytes)) of large files")
             }
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
-        .background(.white.opacity(isHovering ? 0.06 : 0.02), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .shinyGlass(in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .onHover { isHovering = $0 }
-        .animation(.easeOut(duration: 0.15), value: isHovering)
+    }
+
+    private func tile(_ module: Module, value: String, detail: String) -> some View {
+        Button { state.selection = module } label: {
+            HStack(spacing: 10) {
+                ModuleIcon(module: module, size: 30)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(value).font(.system(size: 13.5, weight: .semibold)).monospacedDigit()
+                    Text(detail).font(.system(size: 11)).foregroundStyle(.white.opacity(0.55)).lineLimit(1)
+                }
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.white.opacity(0.4))
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
+            .shinyGlass(in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .help("Open \(module.title)")
     }
 }
 
-private struct TrailingIconLabelStyle: LabelStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: 3) {
-            configuration.title
-            configuration.icon.imageScale(.small)
+// MARK: Running
+
+private struct SmartCareRunning: View {
+    let model: SmartCareModel
+
+    var body: some View {
+        HStack(spacing: 48) {
+            HeroIllustration(symbol: currentSymbol, theme: theme, size: 280, isBusy: true)
+            VStack(alignment: .leading, spacing: 18) {
+                Text("Looking after your Mac…").font(.display(26, weight: .semibold))
+                VStack(alignment: .leading, spacing: 14) {
+                    ForEach(SmartCareModel.Essential.allCases) { essential in
+                        StatusRow(essential: essential, status: model.statuses[essential] ?? .skipped,
+                                  detail: model.statuses[essential] == .working ? model.runDetail : nil)
+                    }
+                }
+            }
+            .frame(width: 360, alignment: .leading)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var currentSymbol: String {
+        SmartCareModel.Essential.allCases.first { model.statuses[$0] == .working }?.symbol ?? Module.smartCare.symbol
+    }
+}
+
+private struct StatusRow: View {
+    let essential: SmartCareModel.Essential
+    let status: SmartCareModel.Status
+    var detail: String?
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                switch status {
+                case .working:
+                    ProgressView().controlSize(.small)
+                case .done:
+                    Image(systemName: "checkmark.circle.fill").font(.system(size: 20)).foregroundStyle(theme.iconGradient)
+                case .failed:
+                    Image(systemName: "exclamationmark.circle.fill").font(.system(size: 20)).foregroundStyle(.orange)
+                case .waiting:
+                    Circle().strokeBorder(.white.opacity(0.3), lineWidth: 1.5).frame(width: 18, height: 18)
+                case .skipped:
+                    Image(systemName: "minus.circle").font(.system(size: 19)).foregroundStyle(.white.opacity(0.3))
+                }
+            }
+            .frame(width: 24, height: 24)
+            EssentialIcon(essential: essential, size: 30)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(essential.title).font(.system(size: 14, weight: .semibold))
+                Text(caption)
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .lineLimit(1)
+                    .contentTransition(.opacity)
+            }
+        }
+        .opacity(status == .skipped || status == .waiting ? 0.55 : 1)
+    }
+
+    private var caption: String {
+        switch status {
+        case .waiting: "Up next"
+        case .working: detail ?? "Working…"
+        case .done(let text), .failed(let text): text
+        case .skipped: "Skipped"
         }
     }
 }
+
+// MARK: Done
 
 private struct SmartCareDone: View {
     let model: SmartCareModel
@@ -194,21 +289,60 @@ private struct SmartCareDone: View {
     var body: some View {
         VStack(spacing: 16) {
             Spacer()
-            HeroIllustration(symbol: "checkmark", theme: Module.smartCare.theme, size: 240)
-            BigSize(bytes: model.freedBytes, size: 58)
-            Text(summary)
-                .font(.system(size: 16))
+            HeroIllustration(symbol: "checkmark", theme: theme, size: 200)
+            BigSize(bytes: model.freedBytes, size: 54)
+            Text(model.tasksCompleted > 0 ? "freed · \(model.tasksCompleted) speed-up task\(model.tasksCompleted == 1 ? "" : "s") done" : "freed")
+                .font(.system(size: 15))
                 .foregroundStyle(.white.opacity(0.7))
+
+            VStack(alignment: .leading, spacing: 12) {
+                ForEach(SmartCareModel.Essential.allCases) { essential in
+                    StatusRow(essential: essential, status: model.statuses[essential] ?? .skipped)
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: 680, alignment: .leading)
+            .shinyGlass(in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+
+            WorthALook(model: model)
+                .frame(maxWidth: 680)
             Spacer()
             Button("Done") { model.finish() }
-                .buttonStyle(.glassPill(prominent: true, tint: Module.smartCare.theme.accent))
+                .buttonStyle(.glassPill(prominent: true, tint: theme.accent))
                 .controlSize(.large)
-                .padding(.bottom, 40)
+                .keyboardShortcut(.defaultAction)
+                .padding(.bottom, 30)
         }
+        .padding(.horizontal, 28)
     }
+}
 
-    private var summary: String {
-        let tasks = model.tasksCompleted
-        return tasks > 0 ? "cleaned · \(tasks) maintenance task\(tasks == 1 ? "" : "s") completed" : "cleaned"
+// MARK: Shared
+
+private struct EssentialIcon: View {
+    let essential: SmartCareModel.Essential
+    let size: CGFloat
+
+    var body: some View {
+        Image(systemName: essential.symbol)
+            .font(.system(size: size * 0.42, weight: .semibold))
+            .frame(width: size, height: size)
+            .background(essential.module.theme.iconGradient, in: RoundedRectangle(cornerRadius: size * 0.28, style: .continuous))
+            .shadow(color: essential.module.theme.accent.opacity(0.4), radius: 6, y: 2)
+    }
+}
+
+private struct SectionLabel: View {
+    let text: String
+
+    var body: some View {
+        Text(text.uppercased())
+            .font(.system(size: 10, weight: .bold))
+            .tracking(0.8)
+            .foregroundStyle(.white.opacity(0.45))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 18)
+            .padding(.top, 12)
+            .padding(.bottom, 4)
     }
 }

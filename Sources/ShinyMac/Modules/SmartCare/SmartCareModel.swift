@@ -1,11 +1,14 @@
 import ShinyCore
 import SwiftUI
 
-/// One-click scan across modules. Results land in each module's own model, so "Review" shows the same data.
+/// One scan across modules, then one Run that works through the essentials in order: remove junk, empty the Trash,
+/// run the speed-up tasks. Anything that needs judgement (updates, leftovers, large files) is only suggested.
+/// Results land in each module's own model, so opening a module shows the same data.
 @Observable
 final class SmartCareModel {
-    enum Phase: Equatable { case idle, scanning, results, running, done }
+    enum Phase: Equatable { case idle, scanning, ready, running, done }
 
+    /// Scan areas, shown as chips while scanning.
     enum Area: String, CaseIterable, Identifiable {
         case cleanup = "Cleanup"
         case speed = "Speed"
@@ -21,24 +24,47 @@ final class SmartCareModel {
             case .clutter: .largeFiles
             }
         }
+    }
 
-        var symbol: String {
+    /// The essentials Run performs, in this order.
+    enum Essential: String, CaseIterable, Identifiable {
+        case junk, trash, speed
+        var id: Self { self }
+
+        var title: String {
             switch self {
-            case .cleanup: "bubbles.and.sparkles.fill"
-            case .speed: "bolt.fill"
-            case .applications: "square.grid.2x2.fill"
-            case .clutter: "doc.on.doc.fill"
+            case .junk: "Remove system junk"
+            case .trash: "Empty the Trash"
+            case .speed: "Speed up your Mac"
             }
         }
 
-        /// Areas whose results can be acted on directly by Run.
-        var isActionable: Bool { self == .cleanup || self == .speed }
+        var symbol: String {
+            switch self {
+            case .junk: "bubbles.and.sparkles.fill"
+            case .trash: "trash.fill"
+            case .speed: "bolt.fill"
+            }
+        }
+
+        var module: Module {
+            switch self {
+            case .junk: .systemJunk
+            case .trash: .trash
+            case .speed: .maintenance
+            }
+        }
+    }
+
+    enum Status: Equatable {
+        case waiting, working, done(String), failed(String), skipped
     }
 
     private(set) var phase: Phase = .idle
     private(set) var finished: Set<Area> = []
-    var included: Set<Area> = [.cleanup, .speed]
-    private(set) var runStep = ""
+    var enabled: Set<Essential> = Set(Essential.allCases)
+    private(set) var statuses: [Essential: Status] = [:]
+    private(set) var runDetail = ""
     private(set) var freedBytes: Int64 = 0
     private(set) var tasksCompleted = 0
 
@@ -61,29 +87,52 @@ final class SmartCareModel {
 
     // MARK: Summary values
 
-    var cleanableBytes: Int64 { junk.selectedSize + trash.selectedSize }
+    /// Bytes Run would free with the current choices.
+    var freeableBytes: Int64 {
+        (enabled.contains(.junk) ? junk.selectedSize : 0) + (enabled.contains(.trash) ? trash.selectedSize : 0)
+    }
+
     var largeFileBytes: Int64 { largeFiles.files.reduce(0) { $0 + $1.size } }
 
-    func headline(for area: Area) -> String {
-        switch area {
-        case .cleanup: ByteFormat.string(cleanableBytes)
-        case .speed: "\(maintenance.selectedTasks.count) tasks"
-        case .applications: updater.updates.isEmpty ? "Up to date" : "\(updater.updates.count) updates"
-        case .clutter: "\(largeFiles.files.count) large files"
+    /// Essentials that are switched on and have something to do.
+    var plannedEssentials: [Essential] {
+        Essential.allCases.filter { enabled.contains($0) && hasWork($0) }
+    }
+
+    func hasWork(_ essential: Essential) -> Bool {
+        switch essential {
+        case .junk: !junk.selectedItems.isEmpty
+        case .trash: !trash.selectedItems.isEmpty
+        case .speed: !maintenance.selectedTasks.isEmpty
         }
     }
 
-    func detail(for area: Area) -> String {
-        switch area {
-        case .cleanup:
-            "System junk \(ByteFormat.string(junk.selectedSize)) · Trash \(ByteFormat.string(trash.selectedSize))"
-        case .speed:
-            maintenance.selectedTasks.prefix(3).map(\.title).joined(separator: " · ")
-        case .applications:
-            leftovers.totalSize > 0 ? "\(ByteFormat.string(leftovers.totalSize)) of leftovers from deleted apps" : "No leftovers found"
-        case .clutter:
-            "\(ByteFormat.string(largeFileBytes)) worth reviewing"
+    func headline(for essential: Essential) -> String {
+        switch essential {
+        case .junk: ByteFormat.string(junk.selectedSize)
+        case .trash: ByteFormat.string(trash.selectedSize)
+        case .speed: "\(maintenance.selectedTasks.count) task\(maintenance.selectedTasks.count == 1 ? "" : "s")"
         }
+    }
+
+    func detail(for essential: Essential) -> String {
+        switch essential {
+        case .junk:
+            let names = junk.groups.filter { junk.selectedSize(of: $0) > 0 }.prefix(3).map(\.title)
+            return names.isEmpty ? "Nothing to remove" : names.joined(separator: " · ")
+        case .trash:
+            return trash.selectedItems.isEmpty ? "Already empty" : "Deleted permanently"
+        case .speed:
+            let tasks = maintenance.selectedTasks
+            if tasks.isEmpty { return "No tasks chosen" }
+            let names = tasks.prefix(3).map(\.title).joined(separator: " · ")
+            return tasks.contains(where: \.needsAdmin) ? names + " · asks for your password" : names
+        }
+    }
+
+    func toggle(_ essential: Essential) {
+        guard phase == .ready else { return }
+        if enabled.contains(essential) { enabled.remove(essential) } else { enabled.insert(essential) }
     }
 
     // MARK: Actions
@@ -91,6 +140,9 @@ final class SmartCareModel {
     func scan() {
         // Speed needs no scan: it recommends the selected maintenance tasks.
         finished = [.speed]
+        statuses = [:]
+        freedBytes = 0
+        tasksCompleted = 0
         junkScanned = false
         trashScanned = false
         withAnimation(.smooth) { phase = .scanning }
@@ -113,27 +165,27 @@ final class SmartCareModel {
             }
             try? await Task.sleep(for: .milliseconds(400))
             UserDefaults.standard.set(Date.now, forKey: Preferences.Key.lastSmartCareScan)
-            withAnimation(.smooth) { phase = .results }
+            withAnimation(.smooth) { phase = .ready }
         }
     }
 
+    /// Works through the planned essentials one after the other. Every step ends in a status, and the run always
+    /// reaches the summary, even when a step fails or the password prompt is cancelled.
     func run() {
+        guard phase == .ready else { return }
+        let plan = plannedEssentials
         freedBytes = 0
         tasksCompleted = 0
+        statuses = Dictionary(uniqueKeysWithValues: Essential.allCases.map { ($0, plan.contains($0) ? .waiting : .skipped) })
         withAnimation(.smooth) { phase = .running }
         Task {
-            if included.contains(.cleanup) {
-                for (model, step) in [(junk, "Removing system junk…"), (trash, "Emptying the Trash…")] {
-                    guard !model.selectedItems.isEmpty else { continue }
-                    runStep = step
-                    await model.cleanNow()
-                    freedBytes += model.report.removedBytes
-                }
+            for essential in plan {
+                withAnimation(.smooth) { statuses[essential] = .working }
+                let status = await perform(essential)
+                runDetail = ""
+                withAnimation(.smooth) { statuses[essential] = status }
             }
-            if included.contains(.speed) {
-                runStep = "Running maintenance tasks…"
-                tasksCompleted = await maintenance.runNow()
-            }
+            try? await Task.sleep(for: .milliseconds(600))
             withAnimation(.smooth) { phase = .done }
         }
     }
@@ -142,9 +194,27 @@ final class SmartCareModel {
         withAnimation(.smooth) { phase = .idle }
     }
 
-    func toggle(_ area: Area) {
-        guard area.isActionable else { return }
-        if included.contains(area) { included.remove(area) } else { included.insert(area) }
+    private func perform(_ essential: Essential) async -> Status {
+        switch essential {
+        case .junk, .trash:
+            let model = essential == .junk ? junk : trash
+            runDetail = essential == .junk ? "Clearing caches and logs…" : "Emptying every Trash…"
+            await model.cleanNow()
+            let report = model.report
+            freedBytes += report.removedBytes
+            if report.removedBytes == 0, !report.failures.isEmpty {
+                return .failed("\(report.failures.count) item\(report.failures.count == 1 ? "" : "s") couldn't be removed")
+            }
+            let note = report.failures.isEmpty ? "" : " · \(report.failures.count) skipped"
+            return .done("\(ByteFormat.string(report.removedBytes)) freed" + note)
+        case .speed:
+            let total = maintenance.selectedTasks.count
+            runDetail = maintenance.selectedTasks.contains(where: \.needsAdmin)
+                ? "Running tune-up tasks · enter your password when asked" : "Running tune-up tasks…"
+            tasksCompleted = await maintenance.runNow()
+            if tasksCompleted == 0 { return .failed("No tasks completed") }
+            return .done("\(tasksCompleted) of \(total) task\(total == 1 ? "" : "s") done")
+        }
     }
 
     private enum ScanResult: Sendable {

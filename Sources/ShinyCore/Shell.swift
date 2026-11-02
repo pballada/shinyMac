@@ -11,8 +11,10 @@ public enum Shell {
         public var wasCancelled: Bool { output.contains("(-128)") }
     }
 
+    /// Runs a tool and collects its combined output. With a `timeout`, a tool that hangs (say, a CLI waiting on a
+    /// daemon that never answers) is terminated and reported as failed.
     @discardableResult
-    public static func run(_ executable: String, _ arguments: [String] = []) throws -> Result {
+    public static func run(_ executable: String, _ arguments: [String] = [], timeout: TimeInterval? = nil) throws -> Result {
         let process = Process()
         process.executableURL = URL(filePath: executable)
         process.arguments = arguments
@@ -20,6 +22,11 @@ public enum Shell {
         process.standardOutput = pipe
         process.standardError = pipe
         try process.run()
+        if let timeout {
+            DispatchQueue.global().asyncAfter(deadline: .now() + timeout) { [process] in
+                if process.isRunning { process.terminate() }
+            }
+        }
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         process.waitUntilExit()
         return Result(status: process.terminationStatus, output: String(decoding: data, as: UTF8.self))

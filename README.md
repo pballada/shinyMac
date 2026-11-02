@@ -26,7 +26,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/smart-care.jpg" alt="Smart Care results" width="820">
+  <img src="docs/screenshots/smart-care.jpg" alt="Smart Care: essentials ready to run" width="820">
 </p>
 
 ## Features
@@ -35,9 +35,9 @@ Everything you need to keep a Mac clean and fast, in one native SwiftUI app with
 
 | | Module | What it does |
 |---|---|---|
-| ✨ | **Smart Care** | One scan across every module, a dashboard of what it found, and a one-click tune-up |
+| ✨ | **Smart Care** | One scan and one click: removes system junk, empties the Trash and runs speed-up tasks one after the other, then points out updates, leftovers and large files worth a look |
 | 🫧 | **System Junk** | User caches, logs, Xcode DerivedData and simulators, Homebrew/npm/pip/Yarn/CocoaPods/SwiftPM/Gradle/Cargo caches, Mail downloads, Photos analysis caches, old iPhoto/Aperture libraries, broken preferences, iOS firmware and old device backups, stale downloads |
-| ☁️ | **Cloud Cleanup** | Frees space taken by downloaded iCloud Drive and iCloud app documents, plus Dropbox, Google Drive, OneDrive, Box, pCloud, Proton Drive, Synology Drive and other File Provider apps. The files stay in the cloud |
+| ☁️ | **Cloud Cleanup** | Finds big and long-unused files downloaded from iCloud Drive, iCloud app documents, Dropbox, Google Drive, OneDrive, Box, pCloud, Proton Drive, Synology Drive and other File Provider apps. Only files untouched for 6 months start checked, and the files stay in the cloud |
 | 🗑️ | **Trash Bins** | Every Trash, including external drives, with a Finder fallback when access is restricted |
 | ✋ | **Privacy** | History and cookies for Safari, Chrome, Edge, Brave, Arc, Vivaldi, Opera and Firefox, plus Recent Items. Never touches passwords or bookmarks |
 | 🔐 | **App Permissions** | Which apps can use the camera, microphone, screen recording, Accessibility, Input Monitoring, Full Disk Access and more, including permissions left by deleted apps |
@@ -54,12 +54,13 @@ Everything you need to keep a Mac clean and fast, in one native SwiftUI app with
 | 🔥 | **Shredder** | Drop files to delete them immediately, skipping the Trash |
 | 📈 | **Menu bar monitor** | CPU, memory, disk, battery and network at a glance, the top apps by CPU or memory, and one-click RAM cleanup |
 | 🛠️ | **Xcode** | Simulator runtimes, simulators, DerivedData per project, device support, archives, previews and extra Xcode copies, with safe defaults |
+| 🐳 | **Dev Tools** | Docker build cache, images and volumes; Colima, OrbStack, Podman and Android emulator disks; npm, pnpm, Yarn, pip, uv, Gradle, Maven, Cargo, Go caches; old Node, Python, Ruby and Rust versions; local AI models; node_modules, virtual envs and build folders in idle projects |
 | 🔔 | **Notifications** | A gentle note when free space runs low or the Trash gets big, plus weekly Smart Care reminders |
 
 <p align="center">
   <img src="docs/screenshots/uninstaller.jpg" alt="Uninstaller" width="49%">
+  <img src="docs/screenshots/dev-tools.jpg" alt="Dev Tools" width="49%">
   <img src="docs/screenshots/hidden-settings.jpg" alt="Hidden Settings" width="49%">
-  <img src="docs/screenshots/system-junk.jpg" alt="System Junk" width="49%">
   <img src="docs/screenshots/smart-care-scan.jpg" alt="Smart Care scanning" width="49%">
 </p>
 

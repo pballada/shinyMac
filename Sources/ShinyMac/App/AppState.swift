@@ -58,6 +58,13 @@ final class AppState {
         XcodeScanner.scan(progress: progress)
     }
 
+    let devTools = CleanupModel(
+        module: .devTools, removalMode: .delete, verb: .remove,
+        confirmation: "Caches and dependency folders are deleted right away; your tools rebuild them. Docker items are pruned by Docker, and virtual machine disks go to the Trash."
+    ) { progress in
+        DevToolsScanner.scan(progress: progress)
+    }
+
     let maintenance = MaintenanceModel()
     let loginItems = LoginItemsModel()
     let hiddenSettings = HiddenSettingsModel()
@@ -81,6 +88,7 @@ final class AppState {
         case .spaceLens: spaceLens.badge
         case .duplicates: duplicates.badge
         case .xcode: xcode.badge
+        case .devTools: devTools.badge
         case .shredder: shredder.items.isEmpty ? nil : ByteFormat.string(shredder.totalSize)
         case .maintenance: maintenance.badge
         case .loginItems: loginItems.badge
@@ -123,6 +131,7 @@ final class AppState {
         case .extensions: extensions
         case .duplicates: duplicates
         case .xcode: xcode
+        case .devTools: devTools
         default: nil
         }
     }

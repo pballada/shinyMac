@@ -97,6 +97,8 @@ struct DetailView: View {
             ShredderView(model: state.shredder)
         case .xcode:
             CleanupModuleView(model: state.xcode)
+        case .devTools:
+            CleanupModuleView(model: state.devTools)
         case .maintenance:
             MaintenanceView(model: state.maintenance)
         case .loginItems:
