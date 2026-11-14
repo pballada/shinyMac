@@ -59,7 +59,7 @@ private struct LargeFilesBrowser: View {
         ) {
             Button("Move to Trash", role: .destructive) { model.removeSelected() }
         } message: {
-            Text("\(ByteFormat.string(model.selectedSize)) will be moved to the Trash. You can still restore them from there.")
+            Text("\(nameList(model.selectedFiles.map(\.url.lastPathComponent))): \(ByteFormat.string(model.selectedSize)) will be moved to the Trash. You can still restore them from there.")
         }
     }
 

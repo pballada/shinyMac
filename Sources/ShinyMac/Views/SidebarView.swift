@@ -11,7 +11,7 @@ struct SidebarView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             brand
-                .padding(.top, 38)
+                .padding(.top, 50)
                 .padding(.horizontal, 18)
                 .padding(.bottom, 4)
 
@@ -31,6 +31,7 @@ struct SidebarView: View {
                             SidebarRow(
                                 module: module,
                                 badge: state.badge(for: module),
+                                isBusy: state.isBusy(module),
                                 isSelected: (highlighted ?? state.selection) == module,
                                 namespace: selectionNamespace
                             ) {
@@ -45,11 +46,10 @@ struct SidebarView: View {
             .scrollIndicators(.never)
 
             VStack(spacing: 8) {
-                UpdateBanner(model: SelfUpdateModel.shared)
                 DiskUsageFooter()
+                SidebarLinks()
             }
             .padding(14)
-            .animation(.smooth, value: SelfUpdateModel.shared.phase)
         }
         .frame(width: 240)
         .onChange(of: state.selection) { _, selection in
@@ -98,6 +98,7 @@ struct SidebarView: View {
 private struct SidebarRow: View {
     let module: Module
     let badge: String?
+    var isBusy = false
     let isSelected: Bool
     let namespace: Namespace.ID
     let action: () -> Void
@@ -113,7 +114,10 @@ private struct SidebarRow: View {
                     .foregroundStyle(.white.opacity(isSelected ? 1 : 0.85))
                     .lineLimit(1)
                 Spacer(minLength: 4)
-                if let badge {
+                if isBusy {
+                    ActivityRing(theme: module.theme)
+                        .transition(.opacity.combined(with: .scale(scale: 0.6)))
+                } else if let badge {
                     Text(badge)
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
                         .monospacedDigit()
@@ -139,6 +143,30 @@ private struct SidebarRow: View {
         .onHover { isHovering = $0 }
         .animation(.easeOut(duration: 0.15), value: isHovering)
         .animation(.smooth, value: badge)
+        .animation(.smooth, value: isBusy)
+    }
+}
+
+/// Small spinning gradient arc shown next to a module while it works, so activity is visible from anywhere.
+struct ActivityRing: View {
+    let theme: ModuleTheme
+    var size: CGFloat = 14
+
+    var body: some View {
+        TimelineView(.animation) { context in
+            let angle = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1) * 360
+            ZStack {
+                Circle().stroke(.white.opacity(0.14), lineWidth: 2)
+                Circle()
+                    .trim(from: 0, to: 0.62)
+                    .stroke(AngularGradient(colors: [theme.accent.opacity(0), theme.accent, .white], center: .center),
+                            style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                    .rotationEffect(.degrees(angle))
+            }
+        }
+        .frame(width: size, height: size)
+        .shadow(color: theme.accent.opacity(0.7), radius: 4)
+        .help("Working…")
     }
 }
 
@@ -178,5 +206,30 @@ private struct DiskUsageFooter: View {
                 }
             }
         }
+    }
+}
+
+/// Small Help and About shortcuts at the foot of the sidebar.
+private struct SidebarLinks: View {
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        HStack(spacing: 4) {
+            link("Help", symbol: "questionmark.circle") { openWindow(id: "help") }
+            link("About", symbol: "info.circle") { openWindow(id: "about") }
+            Spacer()
+        }
+    }
+
+    private func link(_ title: String, symbol: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: symbol)
+                .font(.system(size: 11.5, weight: .medium))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.white.opacity(0.6))
     }
 }

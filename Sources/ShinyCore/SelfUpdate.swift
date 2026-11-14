@@ -9,6 +9,13 @@ public enum SelfUpdate {
         public let notes: String
         public let page: URL
         public let download: URL
+
+        public init(version: String, notes: String, page: URL, download: URL) {
+            self.version = version
+            self.notes = notes
+            self.page = page
+            self.download = download
+        }
     }
 
     public enum Failure: LocalizedError, Equatable {

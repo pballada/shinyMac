@@ -1,3 +1,4 @@
+import ShinyCore
 import SwiftUI
 
 /// Groups shown in the sidebar, in display order.
@@ -98,7 +99,7 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .smartCare: "One scan, one click: free up space and speed up your Mac."
         case .systemJunk: "Clear caches, logs and developer clutter that pile up over time."
-        case .cloud: "Find big and forgotten cloud files taking space on this Mac, and offload just those."
+        case .cloud: "Find old cloud files you haven't opened in months, and remove just their downloaded copies from this Mac."
         case .trash: "Empty every Trash on your Mac, all at once."
         case .privacy: "Wipe browsing history, cookies and recent items."
         case .appPermissions: "See which apps can use your camera, microphone, screen and files."
@@ -115,6 +116,23 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .shredder: "Delete files right away, skipping the Trash."
         case .xcode: "Reclaim the gigabytes Xcode, simulators and builds pile up."
         case .devTools: "See what Docker, package managers, toolchains and projects keep on disk."
+        }
+    }
+
+    /// Small heading above the size on a scan's summary.
+    var resultsEyebrow: String {
+        switch self {
+        case .cloud: "Unused cloud files found"
+        case .trash: "In your Trash"
+        default: "Scan complete"
+        }
+    }
+
+    func resultsCaption(total: Int64) -> String {
+        let size = ByteFormat.string(total)
+        return switch self {
+        case .cloud: "selected of \(size) downloaded from the cloud. Files you haven't opened in 6 months start checked."
+        default: "selected of \(size) found"
         }
     }
 }

@@ -200,3 +200,9 @@ struct ModuleBusyView: View {
         .padding(.horizontal, 40)
     }
 }
+
+/// "A, B, C and 4 more", for naming the exact things a confirmation is about.
+func nameList(_ names: [String], limit: Int = 3) -> String {
+    let shown = names.prefix(limit).joined(separator: ", ")
+    return names.count > limit ? "\(shown) and \(names.count - limit) more" : shown
+}

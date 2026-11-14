@@ -17,7 +17,7 @@ final class CleanupModel {
             case .clean: "Clean"
             case .remove: "Remove"
             case .empty: "Empty"
-            case .offload: "Free Up"
+            case .offload: "Offload"
             }
         }
 
@@ -38,7 +38,7 @@ final class CleanupModel {
     let keepsOnePerGroup: Bool
     /// Whether the "always move to Trash" preference applies. Off for modules that empty the Trash itself.
     let honorsTrashPreference: Bool
-    /// Asked before cleaning when set (e.g. for privacy data, which can log you out of sites).
+    /// Extra caveat added to the confirmation asked before every clean (e.g. privacy data can log you out of sites).
     let confirmation: String?
     private let scanner: @Sendable (ScanProgress) -> [CleanupGroup]
 
@@ -108,6 +108,34 @@ final class CleanupModel {
 
     var adminFailures: [Cleaner.Failure] { report.failures.filter(\.needsAdmin) }
 
+    /// Mode the next clean will use, after the "always move to Trash" preference.
+    var effectiveMode: RemovalMode {
+        Preferences.alwaysUseTrash && honorsTrashPreference ? .trash : removalMode
+    }
+
+    /// Title of the confirmation every clean goes through, after the user has seen the list.
+    var confirmationTitle: String {
+        let count = selectedItems.count
+        let things = "\(count) item\(count == 1 ? "" : "s")"
+        switch verb {
+        case .offload: return "Remove the downloaded copies of \(things)?"
+        case .empty: return "Permanently delete \(things) from the Trash?"
+        default: return effectiveMode == .trash ? "Move \(things) to the Trash?" : "Delete \(things) permanently?"
+        }
+    }
+
+    var confirmationMessage: String {
+        let categories = groups.filter { selectedSize(of: $0) > 0 }
+        let names = categories.prefix(3).map(\.title).joined(separator: ", ")
+        let more = categories.count > 3 ? " and \(categories.count - 3) more" : ""
+        let what = "\(ByteFormat.string(selectedSize)) from \(names)\(more)."
+        if let confirmation { return what + " " + confirmation }
+        switch effectiveMode {
+        case .trash: return what + " You can restore them from the Trash."
+        case .delete: return what + " Apps rebuild this data when they need it. This can't be undone."
+        }
+    }
+
     func checkState(of group: CleanupGroup) -> CheckState {
         CheckState(selected: group.items.count { selected.contains($0.url) }, total: group.items.count)
     }
@@ -162,7 +190,7 @@ final class CleanupModel {
     func cleanNow() async {
         let items = selectedItems
         guard !items.isEmpty else { return }
-        let mode = Preferences.alwaysUseTrash && honorsTrashPreference ? .trash : removalMode
+        let mode = effectiveMode
         lastMode = mode
         progress = .init()
         withAnimation(.smooth) { phase = .cleaning }

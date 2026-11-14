@@ -79,7 +79,8 @@ struct SettingsView: View {
             }
 
             Section {
-                Link("Source code on GitHub", destination: URL(string: "https://github.com/pballada/shinyMac")!)
+                Link("Source code on GitHub", destination: Support.repoURL)
+                Link("☕ Buy me a coffee", destination: Support.coffeeURL)
             }
         }
         .formStyle(.grouped)

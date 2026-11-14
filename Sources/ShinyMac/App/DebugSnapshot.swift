@@ -14,11 +14,18 @@ enum DebugSnapshot {
         if let raw = env["SHINYMAC_MODULE"], let module = Module(rawValue: raw) {
             state.selection = module
         }
+        if let version = env["SHINYMAC_FAKE_UPDATE"] {
+            SelfUpdateModel.shared.debugPretendAvailable(version)
+        }
         if let action = env["SHINYMAC_ACTION"] {
             state.performDebugAction(action)
         }
         guard let path = env["SHINYMAC_SNAPSHOT"] else { return }
         let delay = Double(env["SHINYMAC_SNAPSHOT_DELAY"] ?? "") ?? 2.5
+        let wanted = env["SHINYMAC_WINDOW"]
+        var target: NSWindow? {
+            NSApp.windows.first { $0.isVisible && (wanted == nil || $0.identifier?.rawValue.hasPrefix(wanted!) == true) }
+        }
         Task {
             // Occluded windows aren't rendered, so keep ours on top while the snapshot is pending.
             try? await Task.sleep(for: .milliseconds(100))
@@ -30,15 +37,15 @@ enum DebugSnapshot {
             try? await Task.sleep(for: .seconds(delay))
             // Long scans give other apps time to take focus, and a background window can render blank. Bring it back.
             NSApp.activate(ignoringOtherApps: true)
-            NSApp.windows.first(where: \.isVisible)?.makeKeyAndOrderFront(nil)
+            target?.makeKeyAndOrderFront(nil)
             try? await Task.sleep(for: .seconds(1))
-            if let width = Double(env["SHINYMAC_WIDTH"] ?? ""), let window = NSApp.windows.first(where: \.isVisible) {
+            if let width = Double(env["SHINYMAC_WIDTH"] ?? ""), let window = target {
                 // Layout check: shrink the window, then report the width the content actually needs.
                 window.setContentSize(NSSize(width: width, height: window.frame.height))
                 try? await Task.sleep(for: .seconds(1))
                 print("SHINYMAC_WINDOW \(Int(window.frame.width))x\(Int(window.frame.height))")
             }
-            if env["SHINYMAC_SNAPSHOT_EXTERNAL"] != nil, let window = NSApp.windows.first(where: \.isVisible) {
+            if env["SHINYMAC_SNAPSHOT_EXTERNAL"] != nil, let window = target {
                 // Idle SwiftUI layers can come out blank with cacheDisplay; let `screencapture -l` grab the window instead.
                 print("SHINYMAC_WINDOW_ID \(window.windowNumber)")
                 fflush(stdout)
@@ -46,7 +53,7 @@ enum DebugSnapshot {
                 NSApp.terminate(nil)
                 return
             }
-            guard let view = NSApp.windows.first(where: \.isVisible)?.contentView?.superview,
+            guard let view = target?.contentView?.superview,
                   let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
             view.cacheDisplay(in: view.bounds, to: rep)
             try? rep.representation(using: .png, properties: [:])?.write(to: URL(filePath: path))

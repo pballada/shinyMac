@@ -19,8 +19,8 @@ extension Module {
         case .cloud:
             [
                 Feature(symbol: "icloud.fill", title: "Every cloud", detail: "iCloud Drive, Dropbox, Google Drive, OneDrive and Box."),
-                Feature(symbol: "clock.badge.questionmark", title: "Big and forgotten", detail: "Large downloads and files you haven't opened in 6 months. Only the forgotten ones start checked."),
-                Feature(symbol: "arrow.down.to.line.compact", title: "Downloads only", detail: "Files stay in the cloud and download again when you open them."),
+                Feature(symbol: "clock.badge.questionmark", title: "Old and unused", detail: "Finds downloaded files you haven't opened in 6 months, plus big ones. Only the unused ones start checked."),
+                Feature(symbol: "list.bullet.rectangle", title: "Review first", detail: "See every file before anything happens. Only the local copy goes; the file stays in the cloud and downloads again when you open it."),
             ]
         case .trash:
             [

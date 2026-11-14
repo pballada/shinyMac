@@ -105,7 +105,7 @@ private struct LoginItemsList: View {
         ) {
             Button("Remove", role: .destructive) { model.remove(pendingRemoval) }
         } message: {
-            Text("They are stopped and their launch files removed. System-wide items ask for your password.")
+            Text("\(nameList(pendingRemoval.map(\.label))). They are stopped and their launch files removed. System-wide items ask for your password.")
         }
     }
 }

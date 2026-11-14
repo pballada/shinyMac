@@ -17,6 +17,7 @@
   <a href="https://github.com/pballada/shinyMac/releases/latest"><img src="https://img.shields.io/github/v/release/pballada/shinyMac?color=C77DFF" alt="Latest release"></a>
   <a href="https://github.com/pballada/shinyMac/releases"><img src="https://img.shields.io/github/downloads/pballada/shinyMac/total?color=FF7AD9" alt="Downloads"></a>
   <a href="https://github.com/pballada/shinyMac/stargazers"><img src="https://img.shields.io/github/stars/pballada/shinyMac?style=social" alt="GitHub stars"></a>
+  <a href="https://buymeacoffee.com/pballada"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-☕-FFDD00?logo=buymeacoffee&logoColor=black" alt="Buy me a coffee"></a>
 </p>
 
 <p align="center">
@@ -70,7 +71,7 @@ Everything you need to keep a Mac clean and fast, in one native SwiftUI app with
 
 ## Safety first
 
-- **You see everything before it goes.** Every module lets you review exactly what will be removed.
+- **You see everything before it goes.** A scan only ever leads to a review list of every file; removal starts from there, and always ends with a confirmation that says how many items go and where.
 - **Recoverable by default.** Apps, leftovers and large files go to the Trash. Only regenerable data (caches, logs) is deleted outright, and *Settings › Move everything to the Trash* changes that too.
 - **A hard safety net.** `SafetyGuard` refuses to touch system folders, top-level home folders or anything too shallow, no matter what a scanner proposes.
 - **Conservative matching.** Leftover detection uses bundle-ID component boundaries and exact names, skips Apple, and ignores anything belonging to a vendor whose apps you still have.
@@ -126,6 +127,18 @@ Tests/
 - **Engine and UI are separate.** Every scanner is a plain function in `ShinyCore`, tested against throwaway home folders. The app runs them off the main actor and polls a lock-free `ScanProgress`.
 - **One flow, many modules.** `CleanupModel` drives scan → results → review → clean → done for System Junk, Trash, Privacy and Leftovers.
 - **Design system.** Per-section themes, a drifting `MeshGradient` aurora, Liquid Glass (macOS 26) with a material fallback, an orb action button and layered hero illustrations.
+
+## Help
+
+Choose **Help › ShinyMac Help** (⌘?) for a guide to every tool, how ShinyMac keeps your files safe, and answers to common questions.
+
+## Support the project
+
+ShinyMac is free, open source and has no ads, tracking or subscriptions. If it saved you some space or time, you can say thanks with a coffee:
+
+<a href="https://buymeacoffee.com/pballada"><img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=☕&slug=pballada&button_colour=C77DFF&font_colour=ffffff&font_family=Poppins&outline_colour=ffffff&coffee_colour=FFDD00" alt="Buy me a coffee" height="44"></a>
+
+Bug reports and ideas are just as welcome in [Issues](https://github.com/pballada/shinyMac/issues).
 
 ## License
 

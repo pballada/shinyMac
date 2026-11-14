@@ -15,6 +15,7 @@ enum Preferences {
         static let autoCheckUpdates = "autoCheckUpdates"
         static let autoInstallUpdates = "autoInstallUpdates"
         static let lastUpdateCheck = "lastUpdateCheck"
+        static let coffeeSnoozedUntil = "coffeeSnoozedUntil"
     }
 
     /// Move everything to the Trash, even regenerable junk that is normally deleted outright.
