@@ -37,7 +37,6 @@ struct CleanupModuleView: View {
 
 struct CleanupResultsView: View {
     @Bindable var model: CleanupModel
-    @State private var isConfirming = false
 
     private var theme: ModuleTheme { model.module.theme }
 
@@ -56,7 +55,7 @@ struct CleanupResultsView: View {
                 HeroIllustration(symbol: model.module.symbol, theme: theme, size: 240)
 
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(model.groups.isEmpty ? "All clean" : "Scan complete")
+                    Text(model.groups.isEmpty ? "All clean" : model.module.resultsEyebrow)
                         .font(.system(size: 12.5, weight: .bold))
                         .tracking(1.2)
                         .textCase(.uppercase)
@@ -69,25 +68,26 @@ struct CleanupResultsView: View {
                             .foregroundStyle(.white.opacity(0.7))
                     } else {
                         BigSize(bytes: model.selectedSize, size: 66)
-                        Text("selected of \(ByteFormat.string(model.totalSize)) found")
+                        Text(model.module.resultsCaption(total: model.totalSize))
                             .font(.system(size: 15))
                             .foregroundStyle(.white.opacity(0.7))
                         groupSummary.padding(.top, 10)
-                        Button("Review Details…") { model.isReviewing = true }
-                            .buttonStyle(.glassPill)
-                            .padding(.top, 10)
+                        Text("Nothing is removed until you review the list and confirm.")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .padding(.top, 8)
                     }
                 }
                 .frame(width: 330, alignment: .leading)
             }
             Spacer(minLength: 8)
 
-            OrbButton(title: model.cleanVerb, theme: theme, isEnabled: model.selectedSize > 0) {
-                if model.confirmation == nil { model.clean() } else { isConfirming = true }
+            // Removal only ever starts from the review list, never straight from the summary.
+            OrbButton(title: "Review", theme: theme, isEnabled: !model.groups.isEmpty) {
+                model.isReviewing = true
             }
             .padding(.bottom, 34)
         }
-        .cleanupConfirmation(model: model, isPresented: $isConfirming)
     }
 
     private var groupSummary: some View {
@@ -159,7 +159,7 @@ struct CleanupReviewView: View {
             }
 
             OrbButton(title: model.cleanVerb, theme: theme, size: 80, isEnabled: model.selectedSize > 0) {
-                if model.confirmation == nil { model.clean() } else { isConfirming = true }
+                isConfirming = true
             }
         }
         .padding(.horizontal, 24)
@@ -319,6 +319,10 @@ struct CleanupDoneView: View {
                 .font(.system(size: 16))
                 .foregroundStyle(.white.opacity(0.7))
 
+            if model.report.removedBytes > 0 {
+                CoffeeNudge(tint: theme.accent).padding(.top, 6)
+            }
+
             if !model.report.failures.isEmpty {
                 failureCard.frame(maxWidth: 460)
             }
@@ -358,14 +362,10 @@ struct CleanupDoneView: View {
 
 private extension View {
     func cleanupConfirmation(model: CleanupModel, isPresented: Binding<Bool>) -> some View {
-        confirmationDialog(
-            "\(model.cleanVerb) \(ByteFormat.string(model.selectedSize))?",
-            isPresented: isPresented,
-            titleVisibility: .visible
-        ) {
-            Button(model.cleanVerb, role: .destructive) { model.clean() }
+        confirmationDialog(model.confirmationTitle, isPresented: isPresented, titleVisibility: .visible) {
+            Button("\(model.cleanVerb) \(ByteFormat.string(model.selectedSize))", role: .destructive) { model.clean() }
         } message: {
-            Text(model.confirmation ?? "")
+            Text(model.confirmationMessage)
         }
     }
 }

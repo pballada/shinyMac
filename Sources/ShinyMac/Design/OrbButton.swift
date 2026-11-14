@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The big round, glowing primary action ("Scan", "Clean", "Run").
+/// The big round, glowing primary action ("Scan", "Review", "Clean").
 struct OrbButton: View {
     let title: String
     let theme: ModuleTheme
@@ -56,7 +56,7 @@ struct PressScaleStyle: ButtonStyle {
     }
 }
 
-/// Secondary capsule button on glass, e.g. "Review Details".
+/// Secondary capsule button on glass, e.g. "Scan Again".
 struct GlassPillButtonStyle: ButtonStyle {
     var prominent = false
     var tint: Color = .white

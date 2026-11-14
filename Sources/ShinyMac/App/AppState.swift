@@ -99,6 +99,25 @@ final class AppState {
         }
     }
 
+    /// Whether a module is scanning, cleaning or otherwise working, for the sidebar's activity indicator.
+    func isBusy(_ module: Module) -> Bool {
+        if let model = cleanupModel(for: module) {
+            return model.phase == .scanning || model.phase == .cleaning
+        }
+        return switch module {
+        case .smartCare: smartCare.phase == .scanning || smartCare.phase == .running
+        case .largeFiles: largeFiles.phase == .scanning || largeFiles.isRemoving
+        case .spaceLens: spaceLens.phase == .scanning || spaceLens.isRemoving
+        case .uninstaller: uninstaller.phase == .loading || uninstaller.isRemoving
+        case .updater: updater.phase == .checking
+        case .appPermissions: appPermissions.phase == .loading
+        case .loginItems: loginItems.phase == .loading
+        case .maintenance: maintenance.isRunning
+        case .shredder: shredder.isShredding
+        default: false
+        }
+    }
+
     #if DEBUG
     /// Read-only actions for the screenshot hook.
     func performDebugAction(_ action: String) {

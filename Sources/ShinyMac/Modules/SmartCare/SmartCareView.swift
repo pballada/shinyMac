@@ -66,7 +66,11 @@ private struct SmartCareScanning: View {
 
 private struct SmartCareReady: View {
     let model: SmartCareModel
+    #if DEBUG
+    @State private var isConfirming = ProcessInfo.processInfo.environment["SHINYMAC_ACTION"] == "review"
+    #else
     @State private var isConfirming = false
+    #endif
 
     var body: some View {
         VStack(spacing: 18) {
@@ -103,17 +107,54 @@ private struct SmartCareReady: View {
                 .frame(maxWidth: 680)
 
             Spacer(minLength: 0)
-            OrbButton(title: "Run", theme: theme, isEnabled: !model.plannedEssentials.isEmpty) {
-                if model.plannedEssentials.contains(.trash) { isConfirming = true } else { model.run() }
+            // Run only starts from the review sheet, after the user has seen every file.
+            OrbButton(title: "Review", theme: theme, isEnabled: !model.plannedEssentials.isEmpty) {
+                isConfirming = true
             }
             .padding(.bottom, 24)
         }
         .padding(.horizontal, 28)
-        .confirmationDialog("Run Smart Care?", isPresented: $isConfirming, titleVisibility: .visible) {
-            Button("Run") { model.run() }
-        } message: {
-            Text("Emptying the Trash deletes \(ByteFormat.string(model.trash.selectedSize)) permanently. This can't be undone.")
+        .sheet(isPresented: $isConfirming) {
+            ReviewSheet(
+                title: "Review before Smart Care runs",
+                message: reviewMessage,
+                sections: reviewSections,
+                confirmTitle: "Run Smart Care",
+                theme: theme
+            ) { model.run() }
         }
+    }
+
+    private var reviewMessage: String {
+        var parts = ["Open a category to see every file."]
+        if model.plannedEssentials.contains(.junk) { parts.append("Junk is deleted; apps rebuild it when needed.") }
+        if model.plannedEssentials.contains(.trash) { parts.append("Emptying the Trash can't be undone.") }
+        return parts.joined(separator: " ")
+    }
+
+    private var reviewSections: [ReviewSection] {
+        var sections: [ReviewSection] = []
+        let plan = model.plannedEssentials
+        if plan.contains(.junk) {
+            let selected = Set(model.junk.selectedItems.map(\.url))
+            for group in model.junk.groups {
+                let items = group.items.filter { selected.contains($0.url) }
+                if !items.isEmpty {
+                    sections.append(ReviewSection(id: "junk-\(group.id)", title: group.title, symbol: group.symbol, items: items))
+                }
+            }
+        }
+        if plan.contains(.trash) {
+            sections.append(ReviewSection(id: "trash", title: "Trash", symbol: "trash.fill", items: model.trash.selectedItems))
+        }
+        if plan.contains(.speed) {
+            let tasks = model.maintenance.selectedTasks
+            sections.append(ReviewSection(
+                id: "speed", title: "Speed-up tasks", symbol: "bolt.fill",
+                note: tasks.map(\.title).joined(separator: " · ") + " · nothing is deleted"
+            ))
+        }
+        return sections
     }
 
     private var subtitle: String {
@@ -306,6 +347,9 @@ private struct SmartCareDone: View {
 
             WorthALook(model: model)
                 .frame(maxWidth: 680)
+            if model.freedBytes > 0 {
+                CoffeeNudge(tint: theme.accent)
+            }
             Spacer()
             Button("Done") { model.finish() }
                 .buttonStyle(.glassPill(prominent: true, tint: theme.accent))

@@ -78,6 +78,14 @@ final class SelfUpdateModel {
         }
     }
 
+    #if DEBUG
+    /// Screenshot hook: pretend an update is waiting.
+    func debugPretendAvailable(_ version: String) {
+        phase = .available(.init(version: version, notes: "", page: URL(string: "https://github.com/pballada/shinyMac/releases")!,
+                                 download: URL(string: "https://example.com")!))
+    }
+    #endif
+
     func relaunch() {
         guard (try? SelfUpdate.relaunch(Bundle.main.bundleURL)) != nil else { return }
         NSApp.terminate(nil)
@@ -97,49 +105,72 @@ final class SelfUpdateModel {
     }
 }
 
-/// Sidebar card shown while an update is available, installing or waiting for a relaunch.
+/// Banner across the top of the main window while an update is available, installing or waiting for a relaunch.
 struct UpdateBanner: View {
     let model: SelfUpdateModel
+    /// "Later" hides an available update until the next launch; installing and relaunching always show.
+    @State private var dismissedVersion: String?
+
+    private var theme: ModuleTheme { SidebarSection.home.theme }
 
     var body: some View {
-        switch model.phase {
-        case .available(let release):
-            card(title: "ShinyMac \(release.version) is available", detail: "See what's new on GitHub", link: release.page) {
-                Button("Install") { Task { await model.install() } }
+        Group {
+            switch model.phase {
+            case .available(let release) where release.version != dismissedVersion:
+                banner(
+                    title: "ShinyMac \(release.version) is available",
+                    detail: "You have \(model.currentVersion). Installing takes a few seconds and keeps your settings.",
+                    link: release.page
+                ) {
+                    Button("Later") { withAnimation(.smooth) { dismissedVersion = release.version } }
+                        .buttonStyle(.glassPill)
+                    Button("Install Update") { Task { await model.install() } }
+                        .buttonStyle(.glassPill(prominent: true, tint: theme.accent))
+                }
+            case .installing(let release):
+                banner(title: "Installing ShinyMac \(release.version)…", detail: "Checking the signature and replacing the app.") {
+                    ProgressView().controlSize(.small)
+                }
+            case .readyToRelaunch(let version):
+                banner(title: "ShinyMac \(version) is ready", detail: "Relaunch to start using it. It only takes a moment.") {
+                    Button("Relaunch Now") { model.relaunch() }
+                        .buttonStyle(.glassPill(prominent: true, tint: theme.accent))
+                }
+            default:
+                EmptyView()
             }
-        case .installing(let release):
-            card(title: "Installing \(release.version)…", detail: "Checking the signature and replacing the app") {
-                ProgressView().controlSize(.small)
-            }
-        case .readyToRelaunch(let version):
-            card(title: "\(version) is ready", detail: "Relaunch to start using it") {
-                Button("Relaunch") { model.relaunch() }
-            }
-        default:
-            EmptyView()
         }
+        .animation(.smooth, value: model.phase)
     }
 
-    private func card(title: String, detail: String, link: URL? = nil, @ViewBuilder action: () -> some View) -> some View {
-        HStack(spacing: 10) {
+    private func banner(title: String, detail: String, link: URL? = nil, @ViewBuilder actions: () -> some View) -> some View {
+        HStack(spacing: 14) {
             Image(systemName: "arrow.down.circle.fill")
-                .font(.system(size: 20))
-                .foregroundStyle(SidebarSection.home.theme.iconGradient)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(title).font(.system(size: 12, weight: .semibold)).lineLimit(2)
-                if let link {
-                    Link(detail, destination: link).font(.system(size: 11)).foregroundStyle(.white.opacity(0.6))
-                } else {
-                    Text(detail).font(.system(size: 11)).foregroundStyle(.white.opacity(0.6))
+                .font(.system(size: 26))
+                .foregroundStyle(theme.iconGradient)
+                .symbolEffect(.bounce, options: .nonRepeating)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.system(size: 14, weight: .semibold))
+                HStack(spacing: 6) {
+                    Text(detail)
+                    if let link {
+                        Link("What's new", destination: link).underline()
+                    }
                 }
+                .font(.system(size: 12))
+                .foregroundStyle(.white.opacity(0.65))
+                .lineLimit(1)
             }
-            Spacer(minLength: 4)
-            action()
-                .buttonStyle(.glassPill(prominent: true, tint: SidebarSection.home.theme.accent))
-                .controlSize(.small)
+            .layoutPriority(1)
+            Spacer(minLength: 12)
+            HStack(spacing: 8) { actions() }
+                .controlSize(.regular)
+                .fixedSize()
         }
-        .padding(12)
-        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(theme.accent.opacity(0.16), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .shinyGlass(in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .transition(.move(edge: .top).combined(with: .opacity))
     }
 }

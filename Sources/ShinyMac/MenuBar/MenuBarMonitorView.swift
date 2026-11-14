@@ -27,12 +27,12 @@ struct MenuBarMonitorView: View {
 
             Grid(horizontalSpacing: 10, verticalSpacing: 10) {
                 GridRow {
-                    GaugeCard(title: "CPU", value: snapshot.cpuUsage, caption: percent(snapshot.cpuUsage),
+                    GaugeCard(title: "CPU", value: snapshot.cpuUsage, caption: "\(ProcessInfo.processInfo.activeProcessorCount) cores",
                               colors: [Color(hex: 0x5CC8FF), Color(hex: 0x7D5FFF)]) {
                         Sparkline(values: model.cpuHistory).stroke(Color(hex: 0x5CC8FF).opacity(0.8), lineWidth: 1.5)
                     }
                     GaugeCard(title: "Memory", value: snapshot.memoryFraction,
-                              caption: "\(ByteFormat.string(snapshot.memoryUsed)) of \(ByteFormat.string(snapshot.memoryTotal))",
+                              caption: "\(ByteFormat.string(snapshot.memoryUsed)) used",
                               colors: [Color(hex: 0xFF8AD8), Color(hex: 0xC56CF0)]) { EmptyView() }
                 }
                 GridRow {
@@ -61,6 +61,8 @@ struct MenuBarMonitorView: View {
                     model.freeUpMemory()
                 } label: {
                     Label(model.isFreeingMemory ? "Freeing…" : freedLabel, systemImage: "memorychip")
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glassPill)
@@ -70,13 +72,20 @@ struct MenuBarMonitorView: View {
                     openWindow(id: "main")
                     NSApp.activate()
                 } label: {
-                    Label("Open ShinyMac", systemImage: "macwindow").frame(maxWidth: .infinity)
+                    Label("Open ShinyMac", systemImage: "macwindow")
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                        .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glassPill(prominent: true, tint: theme.accent))
             }
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.top, 2)
         }
-        .padding(16)
-        .frame(width: 330)
+        .padding(.horizontal, 16)
+        .padding(.top, 16)
+        .padding(.bottom, 20)
+        .frame(width: 360)
         .background {
             LinearGradient(colors: [theme.deep, Color(hex: 0x241046), theme.deep], startPoint: .topLeading, endPoint: .bottomTrailing)
                 .overlay(RadialGradient(colors: [theme.bright.opacity(0.35), .clear], center: .topTrailing, startRadius: 0, endRadius: 260))
@@ -112,9 +121,9 @@ private struct GaugeCard<Accessory: View>: View {
     @ViewBuilder var accessory: Accessory
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             RingGauge(value: value, colors: colors)
-                .frame(width: 46, height: 46)
+                .frame(width: 44, height: 44)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title.uppercased())
                     .font(.system(size: 9.5, weight: .bold))
@@ -128,12 +137,13 @@ private struct GaugeCard<Accessory: View>: View {
                     .font(.system(size: 10))
                     .foregroundStyle(.white.opacity(0.55))
                     .lineLimit(1)
+                    .fixedSize()
                 accessory.frame(height: 12)
             }
             Spacer(minLength: 0)
         }
         .padding(10)
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .animation(.smooth, value: value)
     }

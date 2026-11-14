@@ -6,6 +6,7 @@ struct TrashModuleView: View {
     @Bindable var model: CleanupModel
     @State private var isReadable = TrashScanner.isUserTrashReadable()
     @State private var isEmptyingWithFinder = false
+    @State private var confirmFinder = false
     @State private var finderError: String?
 
     var body: some View {
@@ -18,7 +19,7 @@ struct TrashModuleView: View {
                     ) {
                         HStack(spacing: 8) {
                             OpenFullDiskAccessButton()
-                            Button(isEmptyingWithFinder ? "Emptying…" : "Empty with Finder") { emptyWithFinder() }
+                            Button(isEmptyingWithFinder ? "Emptying…" : "Empty with Finder") { confirmFinder = true }
                                 .buttonStyle(.glassPill(prominent: true, tint: model.module.theme.accent))
                                 .disabled(isEmptyingWithFinder)
                         }
@@ -27,6 +28,12 @@ struct TrashModuleView: View {
                     .padding(.top, 52)
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
+            }
+            .confirmationDialog("Empty your Trash with Finder?", isPresented: $confirmFinder, titleVisibility: .visible) {
+                Button("Open Trash in Finder") { NSWorkspace.shared.open(Paths.home.appending(path: ".Trash")) }
+                Button("Empty Trash", role: .destructive) { emptyWithFinder() }
+            } message: {
+                Text("ShinyMac can't list what's inside without Full Disk Access. Open the Trash in Finder to check it first: everything in it is deleted permanently.")
             }
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
                 // The user may have just granted Full Disk Access in System Settings.

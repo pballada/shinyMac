@@ -3,6 +3,7 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(AppState.self) private var state
+    @Environment(\.openWindow) private var openWindow
     @AppStorage(Preferences.Key.hasOnboarded) private var hasOnboarded = false
 
     var body: some View {
@@ -13,13 +14,19 @@ struct RootView: View {
                 HStack(spacing: 0) {
                     SidebarView()
 
-                    ZStack {
-                        DetailView(module: state.selection)
-                            .id(state.selection)
-                            .transition(.asymmetric(
-                                insertion: .opacity.combined(with: .scale(scale: 0.985)),
-                                removal: .opacity
-                            ))
+                    VStack(spacing: 0) {
+                        UpdateBanner(model: SelfUpdateModel.shared)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 4)
+                        ZStack {
+                            DetailView(module: state.selection)
+                                .id(state.selection)
+                                .transition(.asymmetric(
+                                    insertion: .opacity.combined(with: .scale(scale: 0.985)),
+                                    removal: .opacity
+                                ))
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                     .padding(.top, 28)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -36,10 +43,16 @@ struct RootView: View {
         .onReceive(NotificationCenter.default.publisher(for: .shinyMacOpenApps)) { note in
             openApps(note.object as? [URL] ?? [])
         }
+        .background(TrafficLightInset())
         .ignoresSafeArea()
         .foregroundStyle(.white)
         .preferredColorScheme(.dark)
         .animation(.smooth(duration: 0.25), value: state.selection)
+        #if DEBUG
+        .onAppear {
+            if let id = ProcessInfo.processInfo.environment["SHINYMAC_WINDOW"] { openWindow(id: id) }
+        }
+        #endif
     }
 }
 

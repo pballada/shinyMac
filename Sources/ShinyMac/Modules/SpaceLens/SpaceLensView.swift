@@ -75,7 +75,7 @@ private struct SpaceLensBrowser: View {
         ) {
             Button("Move to Trash", role: .destructive) { model.removeSelected() }
         } message: {
-            Text("\(ByteFormat.string(model.selectedSize)) will be moved to the Trash.")
+            Text("\(nameList(model.selection.map(\.url.lastPathComponent))): \(ByteFormat.string(model.selectedSize)) will be moved to the Trash. You can restore them from there.")
         }
     }
 
