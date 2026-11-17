@@ -86,16 +86,17 @@ extension Module {
                 Feature(symbol: "checkmark.seal.fill", title: "Byte-for-byte", detail: "Copies are confirmed with a full SHA-256, not just names or sizes."),
                 Feature(symbol: "star.fill", title: "Keeps the original", detail: "The oldest copy stays; extras go to the Trash."),
             ]
-        case .shredder:
-            [
-                Feature(symbol: "hand.draw.fill", title: "Drag and drop", detail: "Drop files or folders to queue them."),
-                Feature(symbol: "flame.fill", title: "No Trash detour", detail: "Gone immediately, including stubborn locked items."),
-            ]
         case .xcode:
             [
                 Feature(symbol: "square.stack.3d.down.right.fill", title: "Simulator runtimes", detail: "Old iOS and visionOS images, several GB each."),
                 Feature(symbol: "ipad.and.iphone", title: "Simulators", detail: "Devices left behind by runtimes you removed."),
                 Feature(symbol: "hammer.fill", title: "Builds & archives", detail: "DerivedData per project, device support and old archives."),
+            ]
+        case .homebrew:
+            [
+                Feature(symbol: "clock.arrow.circlepath", title: "Old versions", detail: "Formulae kept from before an upgrade, removed with brew cleanup."),
+                Feature(symbol: "arrow.down.circle.fill", title: "Downloads & logs", detail: "Bottles and archives Homebrew downloads again when needed."),
+                Feature(symbol: "shippingbox.fill", title: "Unused dependencies", detail: "What brew autoremove would uninstall, for you to decide."),
             ]
         case .devTools:
             [

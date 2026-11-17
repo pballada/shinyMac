@@ -50,16 +50,6 @@ final class SpaceLensModel {
         withAnimation(.smooth) { phase = root == nil ? .idle : .ready }
     }
 
-    func chooseFolder() {
-        let panel = NSOpenPanel()
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.allowsMultipleSelection = false
-        panel.directoryURL = rootURL
-        panel.prompt = "Scan"
-        if panel.runModal() == .OK, let url = panel.url { scan(url) }
-    }
-
     func zoom(into node: DiskNode) {
         guard node.canDrillDown else { return }
         hovered = nil

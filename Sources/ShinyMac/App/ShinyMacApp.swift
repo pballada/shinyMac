@@ -58,6 +58,8 @@ struct AppCommands: Commands {
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
+        // One main window: no File › New Window, and no tab bar items in the View menu (see the app delegate).
+        CommandGroup(replacing: .newItem) {}
         CommandGroup(replacing: .appInfo) {
             Button("About ShinyMac") { openWindow(id: "about") }
             Button("Check for Updates…") {
@@ -78,6 +80,11 @@ struct AppCommands: Commands {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // ShinyMac is a single-window app; window tabs only add confusing View menu items.
+        NSWindow.allowsAutomaticWindowTabbing = false
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Needed when launched as a bare executable (`swift run`) rather than an .app bundle.
         NSApp.setActivationPolicy(.regular)

@@ -40,3 +40,46 @@ struct OpenFullDiskAccessButton: View {
             .buttonStyle(.glassPill)
     }
 }
+
+/// Small, dismissible tip at the top of the main window while Full Disk Access is off. ShinyMac works without it,
+/// so it never blocks anything; Settings keeps a permanent link for later.
+struct FullDiskAccessBanner: View {
+    @AppStorage(Preferences.Key.fullDiskAccessBannerDismissed) private var isDismissed = false
+    @State private var hasAccess = Permissions.hasFullDiskAccess
+
+    var body: some View {
+        Group {
+            if !hasAccess && !isDismissed {
+                HStack(spacing: 12) {
+                    Image(systemName: "lock.shield.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color(hex: 0xFFD479))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Full Disk Access is off").font(.system(size: 12.5, weight: .semibold))
+                        Text("Everything works, but Safari, Mail, the Trash and some caches stay hidden. Allow it for a complete scan.")
+                            .font(.system(size: 11.5))
+                            .foregroundStyle(.white.opacity(0.6))
+                            .lineLimit(1)
+                    }
+                    .layoutPriority(1)
+                    Spacer(minLength: 8)
+                    HStack(spacing: 8) {
+                        Button("Not Now") { withAnimation(.smooth) { isDismissed = true } }
+                            .buttonStyle(.glassPill)
+                        OpenFullDiskAccessButton()
+                    }
+                    .controlSize(.small)
+                    .fixedSize()
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(.black.opacity(0.15), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .shinyGlass(in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            withAnimation(.smooth) { hasAccess = Permissions.hasFullDiskAccess }
+        }
+    }
+}

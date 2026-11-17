@@ -17,7 +17,7 @@ struct SidebarView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
-                    ForEach(SidebarSection.allCases) { section in
+                    ForEach(SidebarSection.allCases.filter { !state.modules(in: $0).isEmpty }) { section in
                         if let title = section.title {
                             Text(title.uppercased())
                                 .font(.system(size: 10.5, weight: .semibold))
@@ -27,7 +27,7 @@ struct SidebarView: View {
                                 .padding(.bottom, 2)
                                 .padding(.horizontal, 10)
                         }
-                        ForEach(section.modules) { module in
+                        ForEach(state.modules(in: section)) { module in
                             SidebarRow(
                                 module: module,
                                 badge: state.badge(for: module),
@@ -63,6 +63,7 @@ struct SidebarView: View {
 
     private func select(_ module: Module) {
         guard module != (highlighted ?? state.selection) else { return }
+        state.clearReturn()
         withAnimation(.snappy(duration: 0.16)) { highlighted = module }
         // Let the highlight render this frame; the detail screen follows on the next run loop turn.
         Task { @MainActor in state.selection = module }

@@ -10,8 +10,7 @@ struct SpaceLensView: View {
             case .idle:
                 ModuleStartView(module: .spaceLens, features: Module.spaceLens.features, actionTitle: "Map") { model.scan() }
                     .overlay(alignment: .bottomTrailing) {
-                        Button("Choose Folder…", systemImage: "folder") { model.chooseFolder() }
-                            .buttonStyle(.glassPill)
+                        ScanLocationMenu(location: model.rootURL) { model.scan($0) }
                             .padding(28)
                     }
             case .scanning:
@@ -46,8 +45,7 @@ private struct SpaceLensBrowser: View {
             HStack(spacing: 10) {
                 breadcrumbs
                 Spacer()
-                Button("Choose Folder…", systemImage: "folder") { model.chooseFolder() }
-                    .buttonStyle(.glassPill)
+                ScanLocationMenu(location: model.rootURL) { model.scan($0) }
                 Button("Rescan", systemImage: "arrow.clockwise") { model.scan() }
                     .buttonStyle(.glassPill)
             }

@@ -60,6 +60,13 @@ final class SmartCareModel {
         case waiting, working, done(String), failed(String), skipped
     }
 
+    /// The category open on the review page.
+    enum ReviewFocus: Hashable {
+        case junk(groupID: String)
+        case trash(groupID: String)
+        case speed
+    }
+
     private(set) var phase: Phase = .idle
     private(set) var finished: Set<Area> = []
     var enabled: Set<Essential> = Set(Essential.allCases)
@@ -67,6 +74,9 @@ final class SmartCareModel {
     private(set) var runDetail = ""
     private(set) var freedBytes: Int64 = 0
     private(set) var tasksCompleted = 0
+    /// Showing the review page, where every file and task is listed before anything runs.
+    var isReviewing = false
+    var reviewFocus: ReviewFocus?
 
     let junk: CleanupModel
     let trash: CleanupModel
@@ -130,6 +140,55 @@ final class SmartCareModel {
         }
     }
 
+    /// Opens the review page, optionally on one essential (switching it on if it was off).
+    func review(_ essential: Essential? = nil) {
+        guard phase == .ready else { return }
+        if let essential {
+            enabled.insert(essential)
+            reviewFocus = firstFocus(in: essential)
+        } else if reviewFocus.map(isVisible) != true {
+            reviewFocus = reviewEssentials.lazy.compactMap(firstFocus).first
+        }
+        withAnimation(.smooth) { isReviewing = true }
+    }
+
+    func finishReview() {
+        withAnimation(.smooth) { isReviewing = false }
+    }
+
+    /// Essentials listed on the review page: switched on and found something.
+    var reviewEssentials: [Essential] {
+        Essential.allCases.filter { essential in
+            guard enabled.contains(essential) else { return false }
+            return switch essential {
+            case .junk: !junk.groups.isEmpty
+            case .trash: !trash.groups.isEmpty
+            case .speed: !maintenance.tasks.isEmpty
+            }
+        }
+    }
+
+    private func firstFocus(in essential: Essential) -> ReviewFocus? {
+        switch essential {
+        case .junk: junk.groups.first.map { .junk(groupID: $0.id) }
+        case .trash: trash.groups.first.map { .trash(groupID: $0.id) }
+        case .speed: .speed
+        }
+    }
+
+    private func isVisible(_ focus: ReviewFocus) -> Bool {
+        switch focus {
+        case .junk(let id): enabled.contains(.junk) && junk.groups.contains { $0.id == id }
+        case .trash(let id): enabled.contains(.trash) && trash.groups.contains { $0.id == id }
+        case .speed: enabled.contains(.speed)
+        }
+    }
+
+    /// Items Run would remove, across junk and the Trash.
+    var plannedItems: [CleanupItem] {
+        (enabled.contains(.junk) ? junk.selectedItems : []) + (enabled.contains(.trash) ? trash.selectedItems : [])
+    }
+
     func toggle(_ essential: Essential) {
         guard phase == .ready else { return }
         if enabled.contains(essential) { enabled.remove(essential) } else { enabled.insert(essential) }
@@ -145,6 +204,7 @@ final class SmartCareModel {
         tasksCompleted = 0
         junkScanned = false
         trashScanned = false
+        isReviewing = false
         withAnimation(.smooth) { phase = .scanning }
         Task {
             await withTaskGroup(of: ScanResult.self) { group in
@@ -177,7 +237,10 @@ final class SmartCareModel {
         freedBytes = 0
         tasksCompleted = 0
         statuses = Dictionary(uniqueKeysWithValues: Essential.allCases.map { ($0, plan.contains($0) ? .waiting : .skipped) })
-        withAnimation(.smooth) { phase = .running }
+        withAnimation(.smooth) {
+            isReviewing = false
+            phase = .running
+        }
         Task {
             for essential in plan {
                 withAnimation(.smooth) { statuses[essential] = .working }

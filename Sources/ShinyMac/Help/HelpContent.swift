@@ -47,7 +47,7 @@ extension HelpTopic {
                 HelpParagraph(title: nil, body: "ShinyMac cleans up junk, removes apps completely and keeps macOS fast. Every tool lives in the sidebar, grouped by what it helps with."),
                 HelpParagraph(title: "The everyday flow", body: "1. Pick a tool in the sidebar and press Scan.\n2. Look at the summary, then press Review to see every file that was found.\n3. Uncheck anything you want to keep.\n4. Press the action button (Clean, Remove, Empty…) and confirm.\n\nNothing is removed before step 4."),
                 HelpParagraph(title: "Not sure where to start?", body: "Run Smart Care. It scans the most useful areas at once, shows you exactly what it would remove, and only acts after you confirm."),
-                HelpParagraph(title: "Full Disk Access", body: "macOS hides some folders (Safari data, Mail downloads, the Trash) from every app until you allow it. Open System Settings › Privacy & Security › Full Disk Access and turn on ShinyMac for the most thorough scan. Everything else works without it."),
+                HelpParagraph(title: "Full Disk Access", body: "macOS hides some folders (Safari data, Mail downloads, the Trash) from every app until you allow it. Open System Settings › Privacy & Security › Full Disk Access and turn on ShinyMac for the most thorough scan. Everything else works without it; a small banner at the top of the window reminds you until you allow it or choose Not Now."),
                 HelpParagraph(title: "Seeing what's running", body: "While a tool scans or cleans, a small spinning ring appears next to it in the sidebar. You can switch to other tools while it works."),
             ]
         case .safety:
@@ -56,7 +56,7 @@ extension HelpTopic {
                 HelpParagraph(title: "Recoverable by default", body: "Apps, leftovers, duplicates and large files go to the Trash, so you can put them back. Only data that apps rebuild on their own (caches, logs, build products) is deleted right away. Turn on Settings › Move everything to the Trash to send that to the Trash too."),
                 HelpParagraph(title: "A hard safety net", body: "Whatever a scanner proposes, ShinyMac refuses to touch system folders, top-level folders in your home, or anything too close to the root of the disk."),
                 HelpParagraph(title: "Careful defaults", body: "Anything that could matter to you, such as cookies, installer packages, Xcode archives, cloud files you used recently or possible user data, starts unchecked."),
-                HelpParagraph(title: "Permanent actions are labelled", body: "Emptying the Trash and the Shredder delete for good, and say so before you confirm."),
+                HelpParagraph(title: "Permanent actions are labelled", body: "Emptying the Trash deletes for good, and say so before you confirm."),
             ]
         case .module(let module):
             [
@@ -75,7 +75,7 @@ extension HelpTopic {
         case .faq:
             [
                 HelpParagraph(title: "Is it safe to delete caches?", body: "Yes. Caches are copies apps keep to go faster. They rebuild them when needed; the first launch afterwards can be a little slower."),
-                HelpParagraph(title: "I removed something by mistake", body: "Open the Trash in the Dock and choose Put Back. Items from the Shredder, from emptying the Trash and regenerable junk can't be recovered (unless you have a Time Machine backup)."),
+                HelpParagraph(title: "I removed something by mistake", body: "Open the Trash in the Dock and choose Put Back. Items from emptying the Trash and regenerable junk can't be recovered (unless you have a Time Machine backup)."),
                 HelpParagraph(title: "Why does the space not show up right away?", body: "Items moved to the Trash still take space until you empty it. macOS can also take a moment to update the free space it reports, especially with local Time Machine snapshots."),
                 HelpParagraph(title: "Does Cloud Cleanup delete my files?", body: "No. It removes only the copy downloaded to this Mac. The file stays in iCloud Drive, Dropbox or your other cloud and downloads again when you open it."),
                 HelpParagraph(title: "Why does it ask for my password?", body: "Some tasks touch system-wide files or settings (system launch daemons, Spotlight, DNS). macOS asks for an administrator password for those; ShinyMac never sees or stores it."),
@@ -95,15 +95,15 @@ extension Module {
     var helpSteps: String? {
         switch self {
         case .smartCare:
-            "Press Scan. Smart Care looks at system junk, the Trash, apps and large files at the same time. Turn essentials on or off, open any of them with the arrow to see its files, then press Review. The review sheet lists every file; press Run Smart Care to go ahead."
-        case .systemJunk, .xcode, .devTools, .leftovers, .extensions, .privacy:
+            "Press Scan. Smart Care looks at system junk, the Trash, apps and large files at the same time. Turn essentials on or off, then press Review (or the arrow next to an essential). The review page lists every category on the left and its files on the right; uncheck anything to keep and press Run Smart Care. The Worth a look tiles open their tools, with a button at the top to come back."
+        case .systemJunk, .xcode, .homebrew, .devTools, .leftovers, .extensions, .privacy:
             "Press Scan, then Review. Click a category on the left to see its files on the right and uncheck anything you want to keep. Press the action button and confirm."
         case .cloud:
             "Press Scan. ShinyMac lists files downloaded from your cloud services, grouped by service. Files you haven't opened in 6 months start checked; big files you used recently are shown but left unchecked. Press Review, check the list, then Offload and confirm."
         case .trash:
             "Press Scan to see what's in every Trash, including those on external drives. Press Review to look through the files, then Empty and confirm."
         case .duplicates:
-            "Press Scan. Each group is a set of identical files. The oldest copy is marked Original and is always kept, even if you select every copy. Review, then Remove to move the extras to the Trash."
+            "Press Scan. Each group is a set of identical files. The oldest copy is marked Original and is always kept, even if you select every copy. Review, then Remove to move the extras to the Trash. Use the location button next to Scan Again to look on an external disk or in any folder."
         case .appPermissions:
             "Press View. Each permission lists the apps that hold it. Use Change in Settings to turn one off in System Settings, where macOS keeps these switches."
         case .maintenance:
@@ -113,15 +113,13 @@ extension Module {
         case .hiddenSettings:
             "Flip the switches you like. Changes apply immediately (Finder or the Dock may restart). Restore Defaults puts every option back."
         case .uninstaller:
-            "Pick an app, or drop one on the window or the Dock icon. ShinyMac lists the app and every file it left around your Library. Uncheck anything to keep, then Uninstall. Reset keeps the app but wipes its settings and data."
+            "Pick an app, or drop one on the window or the Dock icon. ShinyMac lists the app and every file it left around your Library. Uncheck anything to keep, then Uninstall. Reset keeps the app but wipes its settings and data. To remove several apps at once, click the circles next to them (or ⌘-click); while apps are checked, clicking a row adds or removes it, and Clear Selection goes back."
         case .updater:
             "Press Check. Apps with a newer version are listed with a button to update or open their App Store page, and What's New shows the release notes."
         case .largeFiles:
-            "Press Scan, then filter by kind, last opened date and size. Check files you don't need and press Remove; they go to the Trash."
+            "Press Scan, then filter by kind, last opened date and size. Check files you don't need and press Remove; they go to the Trash. The location button scans an external disk or any folder instead of your Home folder."
         case .spaceLens:
-            "Press Map to chart your home folder. Hover a slice to see its size, click to drill in, and use the list on the right to select items to move to the Trash."
-        case .shredder:
-            "Drop files and folders onto the window, or press Choose Files…. Check the list, press Shred and confirm. They are deleted immediately without going through the Trash."
+            "Press Map to chart your Home folder, or use the location button to map an external disk or any folder. Hover a slice to see its size, click to drill in, and use the list on the right to select items to move to the Trash."
         }
     }
 
@@ -135,8 +133,8 @@ extension Module {
         case .privacy: "Browsers are quit before their data is cleared. Cookies log you out of websites, so they start unchecked. Passwords and bookmarks are never touched."
         case .leftovers: "Files from a vendor whose apps you still use are left alone, and everything goes to the Trash."
         case .xcode: "Build data and caches are deleted outright since Xcode rebuilds them. Archives start unchecked and go to the Trash."
+        case .homebrew: "Old versions and unused dependencies are removed by brew itself, so Homebrew stays consistent. Pinned formulae are never touched. Unused dependencies start unchecked."
         case .devTools: "Docker items are removed with Docker's own prune commands. Project folders are only suggested when the project hasn't changed in a while."
-        case .shredder: "There is no undo. If you might want something back, use the Trash instead."
         case .uninstaller: "Running apps are quit first. Everything goes to the Trash, so you can still put an app back."
         default: nil
         }

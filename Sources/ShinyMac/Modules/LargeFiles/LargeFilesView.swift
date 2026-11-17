@@ -9,9 +9,14 @@ struct LargeFilesView: View {
             switch model.phase {
             case .idle:
                 ModuleStartView(module: .largeFiles, features: Module.largeFiles.features) { model.scan() }
+                    .overlay(alignment: .bottomTrailing) {
+                        ScanLocationMenu(location: model.location) { model.scan(at: $0) }
+                            .padding(28)
+                    }
             case .scanning:
                 ModuleBusyView(
-                    module: .largeFiles, title: "Looking for large files…", detail: model.progress.detail,
+                    module: .largeFiles, title: "Looking for large files\(ScanLocation.suffix(for: model.location))…",
+                    detail: model.progress.detail,
                     foundBytes: model.progress.bytesFound, onStop: model.stop
                 )
             case .ready:
@@ -37,6 +42,7 @@ private struct LargeFilesBrowser: View {
                     .monospacedDigit()
                     .foregroundStyle(.white.opacity(0.6))
                 Spacer()
+                ScanLocationMenu(location: model.location) { model.scan(at: $0) }
                 Button("Scan Again", systemImage: "arrow.clockwise") { model.scan() }
                     .buttonStyle(.glassPill)
             }
@@ -155,24 +161,10 @@ private struct LargeFilesBrowser: View {
 
                 Divider().overlay(.white.opacity(0.1))
 
-                HStack {
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("\(model.selectedFiles.count) selected").font(.system(size: 12)).foregroundStyle(.white.opacity(0.6))
-                        Text(ByteFormat.string(model.selectedSize)).font(.display(18, weight: .semibold)).monospacedDigit()
-                    }
-                    Spacer()
-                    Button("Reveal", systemImage: "folder") { FileIcons.reveal(model.selectedFiles.map(\.url)) }
-                        .buttonStyle(.glassPill)
-                        .disabled(model.selectedFiles.isEmpty)
-                    Button {
-                        isConfirming = true
-                    } label: {
-                        Label(model.isRemoving ? "Removing…" : "Remove", systemImage: "trash")
-                    }
-                    .buttonStyle(.glassPill(prominent: true, tint: theme.accent))
-                    .disabled(model.selectedFiles.isEmpty || model.isRemoving)
-                }
-                .padding(14)
+                ReviewFooter(
+                    count: model.selectedFiles.count, size: model.selectedSize, reveal: model.selectedFiles.map(\.url),
+                    actionTitle: model.isRemoving ? "Removing…" : "Remove", tint: theme.accent, isBusy: model.isRemoving
+                ) { isConfirming = true }
             }
         }
     }

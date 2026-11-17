@@ -5,6 +5,23 @@ import SwiftUI
 @Observable
 final class AppState {
     var selection: Module = .smartCare
+    /// The screen a "Back" button returns to after jumping from one screen to another, such as Smart Care's
+    /// Worth a look tiles. Cleared when the user picks a screen in the sidebar.
+    private(set) var returnTo: Module?
+
+    func open(_ module: Module, from origin: Module) {
+        returnTo = origin
+        selection = module
+    }
+
+    func goBack() {
+        guard let returnTo else { return }
+        self.returnTo = nil
+        selection = returnTo
+    }
+
+    /// The user navigated on their own; there's nothing to go back to.
+    func clearReturn() { returnTo = nil }
 
     let junk = CleanupModel(module: .systemJunk, removalMode: .delete) { progress in
         JunkScanner.scan(progress: progress)
@@ -46,16 +63,24 @@ final class AppState {
     let updater = UpdaterModel()
     let largeFiles = LargeFilesModel()
     let spaceLens = SpaceLensModel()
-    let shredder = ShredderModel()
 
-    let duplicates = CleanupModel(module: .duplicates, removalMode: .trash, verb: .remove, keepsOnePerGroup: true) { progress in
-        DuplicateFinder.scan(progress: progress)
+    let duplicates = CleanupModel(
+        module: .duplicates, removalMode: .trash, verb: .remove, keepsOnePerGroup: true, location: Paths.home
+    ) { progress, root in
+        DuplicateFinder.scan(root: root, progress: progress)
     }
     let xcode = CleanupModel(
         module: .xcode, removalMode: .delete, verb: .remove,
         confirmation: "Build data, caches and simulators are deleted right away. Archives and Xcode copies go to the Trash."
     ) { progress in
         XcodeScanner.scan(progress: progress)
+    }
+
+    let homebrew = CleanupModel(
+        module: .homebrew, removalMode: .delete, verb: .remove,
+        confirmation: "Old versions and dependencies are removed with brew; downloads and logs are deleted and fetched again when needed."
+    ) { progress in
+        HomebrewScanner.scan(progress: progress)
     }
 
     let devTools = CleanupModel(
@@ -74,6 +99,22 @@ final class AppState {
         junk: junk, trash: trash, leftovers: leftovers, largeFiles: largeFiles, updater: updater, maintenance: maintenance
     )
 
+    /// Developer screens only appear when their tools are installed. Checked once at launch; it's a handful of
+    /// file lookups.
+    @ObservationIgnored
+    private let hiddenModules: Set<Module> = {
+        var hidden: Set<Module> = []
+        if !DeveloperTools.hasXcode() { hidden.insert(.xcode) }
+        if !HomebrewScanner.isInstalled { hidden.insert(.homebrew) }
+        if !DeveloperTools.hasDevTools() { hidden.insert(.devTools) }
+        return hidden
+    }()
+
+    func isAvailable(_ module: Module) -> Bool { !hiddenModules.contains(module) }
+
+    /// Modules the sidebar lists for a section, without developer screens for tools that aren't installed.
+    func modules(in section: SidebarSection) -> [Module] { section.modules.filter(isAvailable) }
+
     /// Short status shown next to a module in the sidebar, such as the size of junk found.
     func badge(for module: Module) -> String? {
         switch module {
@@ -88,8 +129,8 @@ final class AppState {
         case .spaceLens: spaceLens.badge
         case .duplicates: duplicates.badge
         case .xcode: xcode.badge
+        case .homebrew: homebrew.badge
         case .devTools: devTools.badge
-        case .shredder: shredder.items.isEmpty ? nil : ByteFormat.string(shredder.totalSize)
         case .maintenance: maintenance.badge
         case .loginItems: loginItems.badge
         case .hiddenSettings: hiddenSettings.badge
@@ -113,7 +154,6 @@ final class AppState {
         case .appPermissions: appPermissions.phase == .loading
         case .loginItems: loginItems.phase == .loading
         case .maintenance: maintenance.isRunning
-        case .shredder: shredder.isShredding
         default: false
         }
     }
@@ -150,6 +190,7 @@ final class AppState {
         case .extensions: extensions
         case .duplicates: duplicates
         case .xcode: xcode
+        case .homebrew: homebrew
         case .devTools: devTools
         default: nil
         }
