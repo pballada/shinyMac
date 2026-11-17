@@ -136,7 +136,7 @@ Choose **Help › ShinyMac Help** (⌘?) for a guide to every tool, how ShinyMac
 
 ShinyMac is free, open source and has no ads, tracking or subscriptions. If it saved you some space or time, you can say thanks with a coffee:
 
-<a href="https://buymeacoffee.com/pballada"><img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=☕&slug=pballada&button_colour=C77DFF&font_colour=ffffff&font_family=Poppins&outline_colour=ffffff&coffee_colour=FFDD00" alt="Buy me a coffee" height="44"></a>
+<a href="https://buymeacoffee.com/pballada"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black" alt="Buy me a coffee"></a>
 
 Bug reports and ideas are just as welcome in [Issues](https://github.com/pballada/shinyMac/issues).
 
