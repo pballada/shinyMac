@@ -40,7 +40,10 @@ final class CleanupModel {
     let honorsTrashPreference: Bool
     /// Extra caveat added to the confirmation asked before every clean (e.g. privacy data can log you out of sites).
     let confirmation: String?
-    private let scanner: @Sendable (ScanProgress) -> [CleanupGroup]
+    private let scanner: @Sendable (ScanProgress, URL) -> [CleanupGroup]
+    /// Where the scan looks, for modules that can scan an external disk or any folder (e.g. Duplicates).
+    /// Nil for modules that always look in fixed places.
+    private(set) var location: URL?
 
     private(set) var phase: Phase = .idle
     private(set) var groups: [CleanupGroup] = []
@@ -55,7 +58,7 @@ final class CleanupModel {
     /// Runs before removal with the IDs of groups that have selected items (e.g. to quit browsers).
     private let beforeClean: ((Set<String>) async -> Void)?
 
-    init(
+    convenience init(
         module: Module,
         removalMode: RemovalMode,
         verb: Verb = .clean,
@@ -65,6 +68,25 @@ final class CleanupModel {
         beforeClean: ((Set<String>) async -> Void)? = nil,
         scanner: @escaping @Sendable (ScanProgress) -> [CleanupGroup]
     ) {
+        self.init(
+            module: module, removalMode: removalMode, verb: verb, honorsTrashPreference: honorsTrashPreference,
+            keepsOnePerGroup: keepsOnePerGroup, confirmation: confirmation, beforeClean: beforeClean, location: nil
+        ) { progress, _ in scanner(progress) }
+    }
+
+    /// A module whose scan starts at a location the user picks, the Home folder by default.
+    init(
+        module: Module,
+        removalMode: RemovalMode,
+        verb: Verb = .clean,
+        honorsTrashPreference: Bool = true,
+        keepsOnePerGroup: Bool = false,
+        confirmation: String? = nil,
+        beforeClean: ((Set<String>) async -> Void)? = nil,
+        location: URL?,
+        scanner: @escaping @Sendable (ScanProgress, URL) -> [CleanupGroup]
+    ) {
+        self.location = location
         self.beforeClean = beforeClean
         self.module = module
         self.removalMode = removalMode
@@ -151,17 +173,20 @@ final class CleanupModel {
 
     // MARK: Actions
 
-    func scan() {
+    /// Scans again, at `url` when given (only for modules with a `location`).
+    func scan(at url: URL? = nil) {
+        if let url, location != nil { location = url }
         work?.cancel()
         progress = .init()
         isReviewing = false
         withAnimation(.smooth) { phase = .scanning }
         let scanner = scanner
+        let root = location ?? Paths.home
         let box = ScanProgress()
         work = Task {
             let found = await runInBackground(progress: box, minimumDuration: .seconds(1.2), onProgress: {
                 self.progress = $0
-            }) { scanner(box) }
+            }) { scanner(box, root) }
             guard let found else { return }
             apply(scanResult: found)
         }

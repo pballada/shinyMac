@@ -6,7 +6,7 @@ enum Preferences {
     enum Key {
         static let alwaysUseTrash = "alwaysUseTrash"
         static let showMenuBarMonitor = "showMenuBarMonitor"
-        static let hasOnboarded = "hasOnboarded"
+        static let fullDiskAccessBannerDismissed = "fullDiskAccessBannerDismissed"
         static let spaceAlerts = "spaceAlerts"
         static let careSchedule = "careSchedule"
         static let lastSmartCareScan = "lastSmartCareScan"

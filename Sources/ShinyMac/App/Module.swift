@@ -29,8 +29,8 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
     case privacy, appPermissions
     case maintenance, loginItems, hiddenSettings
     case uninstaller, updater, leftovers, extensions
-    case largeFiles, duplicates, spaceLens, shredder
-    case xcode, devTools
+    case largeFiles, duplicates, spaceLens
+    case xcode, homebrew, devTools
 
     var id: Self { self }
 
@@ -41,8 +41,8 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .privacy, .appPermissions: .protection
         case .maintenance, .loginItems, .hiddenSettings: .performance
         case .uninstaller, .updater, .leftovers, .extensions: .applications
-        case .largeFiles, .duplicates, .spaceLens, .shredder: .files
-        case .xcode, .devTools: .developer
+        case .largeFiles, .duplicates, .spaceLens: .files
+        case .xcode, .homebrew, .devTools: .developer
         }
     }
 
@@ -64,8 +64,8 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .largeFiles: "Large & Old Files"
         case .duplicates: "Duplicates"
         case .spaceLens: "Space Lens"
-        case .shredder: "Shredder"
         case .xcode: "Xcode"
+        case .homebrew: "Homebrew"
         case .devTools: "Dev Tools"
         }
     }
@@ -88,8 +88,8 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .largeFiles: "doc.text.magnifyingglass"
         case .duplicates: "doc.on.doc.fill"
         case .spaceLens: "chart.pie.fill"
-        case .shredder: "flame.fill"
         case .xcode: "hammer.fill"
+        case .homebrew: "mug.fill"
         case .devTools: "terminal.fill"
         }
     }
@@ -113,8 +113,8 @@ enum Module: String, CaseIterable, Identifiable, Hashable {
         case .largeFiles: "Spot big files and things you haven't opened in ages."
         case .duplicates: "Find identical files and keep just one copy."
         case .spaceLens: "See what takes up space, at a glance."
-        case .shredder: "Delete files right away, skipping the Trash."
         case .xcode: "Reclaim the gigabytes Xcode, simulators and builds pile up."
+        case .homebrew: "Clear old formula versions, downloads and dependencies nothing needs."
         case .devTools: "See what Docker, package managers, toolchains and projects keep on disk."
         }
     }

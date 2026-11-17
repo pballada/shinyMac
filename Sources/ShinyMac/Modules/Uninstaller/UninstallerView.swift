@@ -1,3 +1,4 @@
+import AppKit
 import ShinyCore
 import SwiftUI
 
@@ -36,7 +37,7 @@ private struct UninstallerBrowser: View {
             }
 
             HStack(spacing: 14) {
-                AppListPane(model: model).frame(minWidth: 250, idealWidth: 320, maxWidth: 320)
+                AppListPane(model: model).frame(minWidth: 270, idealWidth: 345, maxWidth: 345)
                 // The detail pane gets its room first; the list shrinks on narrow windows.
                 AppDetailPane(model: model).layoutPriority(1)
             }
@@ -97,8 +98,17 @@ private struct AppListPane: View {
             ScrollView {
                 LazyVStack(spacing: 2) {
                     ForEach(model.visibleApps) { app in
-                        AppRow(app: app, size: model.sizes[app.url], isSelected: model.selectedApp?.id == app.id) {
-                            model.select(app)
+                        AppRow(
+                            app: app, size: model.sizes[app.url],
+                            isSelected: model.isSelectingSeveral ? model.isChecked(app) : model.selectedApp?.id == app.id,
+                            isChecked: model.isChecked(app), onCheck: { model.toggleCheck(app) }
+                        ) {
+                            // While several apps are checked, a click adds or removes one; ⌘-click always does.
+                            if model.isSelectingSeveral || NSEvent.modifierFlags.contains(.command) {
+                                model.toggleCheck(app)
+                            } else {
+                                model.select(app)
+                            }
                         }
                     }
                 }
@@ -142,52 +152,60 @@ private struct AppRow: View {
     let app: InstalledApp
     let size: Int64?
     let isSelected: Bool
+    let isChecked: Bool
+    let onCheck: () -> Void
     let action: () -> Void
     @State private var isHovering = false
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 10) {
-                FileIconView(url: app.url, size: 34)
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 5) {
-                        Text(app.name).font(.system(size: 13, weight: .semibold)).lineLimit(1)
-                        if app.isIntelOnly {
-                            Text("INTEL")
-                                .font(.system(size: 8.5, weight: .heavy))
-                                .tracking(0.5)
-                                .padding(.horizontal, 4)
-                                .padding(.vertical, 1.5)
-                                .background(.white.opacity(0.14), in: Capsule())
-                                .foregroundStyle(.white.opacity(0.75))
-                        }
-                    }
-                    Text(subtitle)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.5))
-                        .lineLimit(1)
-                }
-                Spacer(minLength: 4)
-                Group {
-                    if let size {
-                        Text(ByteFormat.string(size))
-                    } else {
-                        ProgressView().controlSize(.mini)
-                    }
-                }
-                .font(.system(size: 12, weight: .medium))
-                .monospacedDigit()
-                .foregroundStyle(.white.opacity(0.7))
+        HStack(spacing: 10) {
+            Button(action: onCheck) {
+                CheckCircle(state: isChecked ? .on : .off, tint: Module.uninstaller.theme.accent, size: 16)
+                    .opacity(isChecked || isHovering ? 1 : 0.55)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(.white.opacity(isSelected ? 0.15 : (isHovering ? 0.06 : 0)))
-            )
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+            .help(isChecked ? "Remove from the apps to uninstall" : "Select to uninstall several apps at once")
+            FileIconView(url: app.url, size: 34)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 5) {
+                    Text(app.name).font(.system(size: 13, weight: .semibold)).lineLimit(1)
+                    if app.isIntelOnly {
+                        Text("INTEL")
+                            .font(.system(size: 8.5, weight: .heavy))
+                            .tracking(0.5)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1.5)
+                            .background(.white.opacity(0.14), in: Capsule())
+                            .foregroundStyle(.white.opacity(0.75))
+                    }
+                }
+                Text(subtitle)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 4)
+            Group {
+                if let size {
+                    Text(ByteFormat.string(size))
+                } else {
+                    ProgressView().controlSize(.mini)
+                }
+            }
+            .font(.system(size: 12, weight: .medium))
+            .monospacedDigit()
+            .lineLimit(1)
+            .fixedSize()
+            .foregroundStyle(.white.opacity(0.7))
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(.white.opacity(isSelected ? 0.15 : (isHovering ? 0.06 : 0)))
+        )
+        .contentShape(Rectangle())
+        .onTapGesture(perform: action)
         .onHover { isHovering = $0 }
     }
 
@@ -211,6 +229,8 @@ private struct AppDetailPane: View {
         GlassCard(padding: 0) {
             if let outcome = model.outcome {
                 OutcomeView(model: model, outcome: outcome)
+            } else if model.isSelectingSeveral {
+                SeveralAppsPane(model: model)
             } else if let app = model.selectedApp {
                 VStack(spacing: 0) {
                     header(for: app).padding(18)
@@ -267,7 +287,7 @@ private struct AppDetailPane: View {
                     ForEach(model.groupedFiles, id: \.kind) { group in
                         Section {
                             ForEach(group.files) { file in
-                                FileRow(model: model, file: file)
+                                FileRow(file: file, isOn: model.fileSelection.contains(file.url)) { model.toggle(file) }
                             }
                         } header: {
                             HStack(spacing: 6) {
@@ -330,13 +350,14 @@ private struct AppDetailPane: View {
 }
 
 private struct FileRow: View {
-    let model: UninstallerModel
     let file: Leftover
+    let isOn: Bool
+    let onToggle: () -> Void
     @State private var isHovering = false
 
     var body: some View {
         HStack(spacing: 10) {
-            CheckCircle(state: model.fileSelection.contains(file.url) ? .on : .off, tint: Module.uninstaller.theme.accent, size: 16)
+            CheckCircle(state: isOn ? .on : .off, tint: Module.uninstaller.theme.accent, size: 16)
             FileIconView(url: file.url, size: 22)
             VStack(alignment: .leading, spacing: 1) {
                 Text(file.url.lastPathComponent).font(.system(size: 12.5, weight: .medium)).lineLimit(1)
@@ -362,9 +383,119 @@ private struct FileRow: View {
         .padding(.vertical, 6)
         .background(.white.opacity(isHovering ? 0.05 : 0))
         .contentShape(Rectangle())
-        .onTapGesture { model.toggle(file) }
+        .onTapGesture(perform: onToggle)
         .onHover { isHovering = $0 }
         .contextMenu { Button("Reveal in Finder") { FileIcons.reveal([file.url]) } }
+    }
+}
+
+/// Several checked apps, each with the files that go with it, uninstalled together.
+private struct SeveralAppsPane: View {
+    @Bindable var model: UninstallerModel
+    @State private var isConfirming = false
+
+    private var theme: ModuleTheme { Module.uninstaller.theme }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("\(model.checked.count) app\(model.checked.count == 1 ? "" : "s") selected").font(.display(22))
+                    Text("Check more apps in the list, or uncheck any file to keep it.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.white.opacity(0.55))
+                }
+                Spacer()
+                Button("Clear Selection") { model.clearChecked() }
+                    .buttonStyle(.glassPill)
+                    .disabled(model.isRemoving)
+            }
+            .padding(18)
+
+            Divider().overlay(.white.opacity(0.1))
+
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    ForEach(model.checked) { app in
+                        Section {
+                            if let files = model.checkedFiles[app.url] {
+                                ForEach(files) { file in
+                                    FileRow(
+                                        file: file, isOn: model.checkedSelection.contains(file.url)
+                                    ) { model.toggleChecked(file) }
+                                }
+                            } else {
+                                ProgressView("Finding related files…")
+                                    .controlSize(.small)
+                                    .padding(.vertical, 10)
+                                    .frame(maxWidth: .infinity)
+                            }
+                        } header: {
+                            appHeader(app)
+                        }
+                    }
+                }
+                .padding(.bottom, 8)
+            }
+
+            Divider().overlay(.white.opacity(0.1))
+
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("\(model.selectedCheckedFiles.count) of \(model.checkedFileCount) items")
+                        .lineLimit(1)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.white.opacity(0.6))
+                    Text(ByteFormat.string(model.selectedCheckedSize))
+                        .font(.display(18, weight: .semibold))
+                        .monospacedDigit()
+                        .fixedSize()
+                }
+                Spacer(minLength: 0)
+                Button {
+                    isConfirming = true
+                } label: {
+                    Label(model.isRemoving ? "Removing…" : "Uninstall \(model.checked.count) App\(model.checked.count == 1 ? "" : "s")",
+                          systemImage: "trash")
+                }
+                .buttonStyle(.glassPill(prominent: true, tint: theme.accent))
+                .fixedSize()
+                .disabled(model.isRemoving || model.isFindingCheckedFiles || model.selectedCheckedFiles.isEmpty)
+            }
+            .padding(14)
+        }
+        .confirmationDialog(
+            "Uninstall \(model.checked.count) app\(model.checked.count == 1 ? "" : "s")?", isPresented: $isConfirming, titleVisibility: .visible
+        ) {
+            Button("Move \(model.selectedCheckedFiles.count) Items to Trash", role: .destructive) { model.removeChecked() }
+        } message: {
+            Text("\(nameList(model.checked.map(\.name))): \(ByteFormat.string(model.selectedCheckedSize)) will be moved to the Trash. Apps that are running will be quit first.")
+        }
+    }
+
+    private func appHeader(_ app: InstalledApp) -> some View {
+        HStack(spacing: 10) {
+            Button { model.toggleFiles(of: app) } label: {
+                CheckCircle(state: model.checkState(of: app), tint: theme.accent, size: 16)
+            }
+            .buttonStyle(.plain)
+            .disabled(model.checkedFiles[app.url] == nil)
+            FileIconView(url: app.url, size: 26)
+            Text(app.name).font(.system(size: 13, weight: .semibold)).lineLimit(1)
+            Spacer()
+            Text(ByteFormat.string(model.checkedSize(of: app)))
+                .font(.system(size: 12, weight: .semibold))
+                .monospacedDigit()
+                .foregroundStyle(.white.opacity(0.75))
+            Button { model.toggleCheck(app) } label: {
+                Image(systemName: "xmark.circle.fill").foregroundStyle(.white.opacity(0.4))
+            }
+            .buttonStyle(.plain)
+            .help("Don't uninstall \(app.name)")
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 8)
+        .background(.ultraThinMaterial.opacity(0.6))
     }
 }
 
@@ -376,7 +507,7 @@ private struct OutcomeView: View {
         VStack(spacing: 14) {
             Spacer()
             HeroIllustration(symbol: "checkmark", theme: Module.uninstaller.theme, size: 190)
-            Text(outcome.wasReset ? "\(outcome.appName) was reset" : "\(outcome.appName) was uninstalled")
+            Text(outcome.title)
                 .font(.display(22))
             Text("\(ByteFormat.string(outcome.report.removedBytes)) moved to the Trash")
                 .foregroundStyle(.white.opacity(0.7))

@@ -38,6 +38,8 @@ final class LargeFilesModel {
     }
 
     private(set) var phase: Phase = .idle
+    /// Where the scan looks: the Home folder by default, or an external disk or folder.
+    private(set) var location = Paths.home
     private(set) var files: [LargeFile] = []
     private(set) var progress = ScanProgress.Snapshot()
     var selection: Set<URL> = []
@@ -78,7 +80,9 @@ final class LargeFilesModel {
 
     var badge: String? { phase == .ready && !files.isEmpty ? ByteFormat.string(totalSize) : nil }
 
-    func scan() {
+    func scan(at url: URL? = nil) {
+        if let url { location = url }
+        let root = location
         work?.cancel()
         progress = .init()
         lastReport = nil
@@ -89,7 +93,7 @@ final class LargeFilesModel {
         work = Task {
             let found = await runInBackground(progress: box, minimumDuration: .seconds(1.2), onProgress: {
                 self.progress = $0
-            }) { LargeFileFinder.scan(minimumSize: floor, progress: box) }
+            }) { LargeFileFinder.scan(root: root, minimumSize: floor, progress: box) }
             guard let found else { return }
             files = found
             selection = []
@@ -99,6 +103,7 @@ final class LargeFilesModel {
 
     /// Adopts results gathered by Smart Care.
     func apply(_ found: [LargeFile]) {
+        location = Paths.home
         files = found
         selection = []
         lastReport = nil

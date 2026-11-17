@@ -12,6 +12,8 @@ struct SmartCareView: View {
                 ModuleStartView(module: .smartCare, features: Module.smartCare.features) { model.scan() }
             case .scanning:
                 SmartCareScanning(model: model)
+            case .ready where model.isReviewing:
+                SmartCareReviewView(model: model)
             case .ready:
                 SmartCareReady(model: model)
             case .running:
@@ -21,6 +23,7 @@ struct SmartCareView: View {
             }
         }
         .transition(.opacity)
+        .animation(.smooth, value: model.isReviewing)
     }
 }
 
@@ -66,11 +69,6 @@ private struct SmartCareScanning: View {
 
 private struct SmartCareReady: View {
     let model: SmartCareModel
-    #if DEBUG
-    @State private var isConfirming = ProcessInfo.processInfo.environment["SHINYMAC_ACTION"] == "review"
-    #else
-    @State private var isConfirming = false
-    #endif
 
     var body: some View {
         VStack(spacing: 18) {
@@ -107,55 +105,26 @@ private struct SmartCareReady: View {
                 .frame(maxWidth: 680)
 
             Spacer(minLength: 0)
-            // Run only starts from the review sheet, after the user has seen every file.
+            // Run only starts from the review page, after the user has seen every file.
             OrbButton(title: "Review", theme: theme, isEnabled: !model.plannedEssentials.isEmpty) {
-                isConfirming = true
+                model.review()
             }
             .padding(.bottom, 24)
         }
         .padding(.horizontal, 28)
-        .sheet(isPresented: $isConfirming) {
-            ReviewSheet(
-                title: "Review before Smart Care runs",
-                message: reviewMessage,
-                sections: reviewSections,
-                confirmTitle: "Run Smart Care",
-                theme: theme
-            ) { model.run() }
+        #if DEBUG
+        .onAppear {
+            // Screenshot hook: open the review page once, so Back still works.
+            guard ProcessInfo.processInfo.environment["SHINYMAC_ACTION"] == "review", !Self.didAutoReview else { return }
+            Self.didAutoReview = true
+            model.review()
         }
+        #endif
     }
 
-    private var reviewMessage: String {
-        var parts = ["Open a category to see every file."]
-        if model.plannedEssentials.contains(.junk) { parts.append("Junk is deleted; apps rebuild it when needed.") }
-        if model.plannedEssentials.contains(.trash) { parts.append("Emptying the Trash can't be undone.") }
-        return parts.joined(separator: " ")
-    }
-
-    private var reviewSections: [ReviewSection] {
-        var sections: [ReviewSection] = []
-        let plan = model.plannedEssentials
-        if plan.contains(.junk) {
-            let selected = Set(model.junk.selectedItems.map(\.url))
-            for group in model.junk.groups {
-                let items = group.items.filter { selected.contains($0.url) }
-                if !items.isEmpty {
-                    sections.append(ReviewSection(id: "junk-\(group.id)", title: group.title, symbol: group.symbol, items: items))
-                }
-            }
-        }
-        if plan.contains(.trash) {
-            sections.append(ReviewSection(id: "trash", title: "Trash", symbol: "trash.fill", items: model.trash.selectedItems))
-        }
-        if plan.contains(.speed) {
-            let tasks = model.maintenance.selectedTasks
-            sections.append(ReviewSection(
-                id: "speed", title: "Speed-up tasks", symbol: "bolt.fill",
-                note: tasks.map(\.title).joined(separator: " · ") + " · nothing is deleted"
-            ))
-        }
-        return sections
-    }
+    #if DEBUG
+    @MainActor private static var didAutoReview = false
+    #endif
 
     private var subtitle: String {
         let tasks = model.enabled.contains(.speed) ? model.maintenance.selectedTasks.count : 0
@@ -167,7 +136,6 @@ private struct SmartCareReady: View {
 private struct EssentialRow: View {
     let model: SmartCareModel
     let essential: SmartCareModel.Essential
-    @Environment(AppState.self) private var state
     @State private var isHovering = false
 
     var body: some View {
@@ -188,12 +156,14 @@ private struct EssentialRow: View {
                 .font(.display(17))
                 .monospacedDigit()
                 .opacity(isOn ? 1 : 0.45)
-            Button { state.selection = essential.module } label: {
+            Button { model.review(essential) } label: {
                 Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold))
+                    .frame(width: 22, height: 22)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white.opacity(0.5))
-            .help("Review in \(essential.module.title)")
+            .help("Review what \(essential.title.lowercased()) includes")
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
@@ -230,7 +200,7 @@ private struct WorthALook: View {
     }
 
     private func tile(_ module: Module, value: String, detail: String) -> some View {
-        Button { state.selection = module } label: {
+        Button { state.open(module, from: .smartCare) } label: {
             HStack(spacing: 10) {
                 ModuleIcon(module: module, size: 30)
                 VStack(alignment: .leading, spacing: 1) {
